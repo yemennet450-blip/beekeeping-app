@@ -222,6 +222,10 @@
         .form-tab-content { display: none; }
         .form-tab-content.active { display: block; animation: fadeIn 0.5s; }
 
+        /* -- Copyright Footer -- */
+        .app-footer { text-align: center; padding: 15px; margin-top: 20px; font-size: 0.9em; color: var(--text-color); opacity: 0.7; }
+        .app-footer p { margin: 0; }
+
         @media (max-width: 768px) {
             .main-content-wrapper { flex-direction: column; }
             .sidebar { width: 100%; height: auto; flex-direction: row; align-items: center; justify-content: space-between; padding: 5px 10px; overflow-x: auto; }
@@ -239,6 +243,9 @@
         @media (max-width: 480px) {
              .dashboard-grid { grid-template-columns: 1fr; }
              .analysis-grid { grid-template-columns: 1fr; }
+             .modal-buttons { flex-direction: column; }
+             .modal-buttons button { width: 100%; margin: 5px 0; }
+             .app-footer { font-size: 0.8em; }
         }
     </style>
 </head>
@@ -498,6 +505,9 @@
             </div>
 
         </div>
+        <footer class="app-footer">
+            <p>حقوق الطبع والنشر &copy; 2025 إدارة المناحل. جميع الحقوق محفوظة.</p>
+        </footer>
     </div>
 </div>
 
@@ -522,7 +532,7 @@
 
 <script>
     // ######################################################
-    // JAVASCRIPT: V15.1 - Quick Actions Logic Update
+    // JAVASCRIPT: V15.3 - APK Fixes & QoL Update
     // ######################################################
     
     const TAB_NAMES_KEY = 'beehiveTabNames_v3';
@@ -942,23 +952,20 @@
     }
     
     function showSiteComparisonView() {
-        // إخفاء العروض الأخرى وإظهار عرض المقارنة
         getElement('standard-view-wrapper').style.display = 'none';
         getElement('global-stats-view').style.display = 'none';
         getElement('site-comparison-view').style.display = 'block';
         getElement('active-location-title').textContent = 'مقارنة شاملة بين جميع المواقع';
 
-        // تدمير الرسوم البيانية القديمة لتجنب التكرار
         Object.values(comparisonCharts).forEach(chart => chart.destroy());
 
         const siteNames = loadTabNames();
         const comparisonData = [];
 
-        // 🧠 الجزء العبقري: تجميع البيانات من كل المواقع
         siteIds.forEach(id => {
             const manager = beehiveManager.get(id);
             const hives = manager.loadHives();
-            if (hives.length === 0) return; // تجاهل المواقع الفارغة
+            if (hives.length === 0) return;
 
             const stats = {
                 strong: 0,
@@ -989,7 +996,6 @@
 
         const labels = comparisonData.map(d => d.name);
 
-        // 📊 الرسم البياني الأول: مقارنة متوسط القوة
         comparisonCharts.avgStrength = new Chart(getElement('siteAvgStrengthCanvas'), {
             type: 'bar',
             data: {
@@ -1005,7 +1011,6 @@
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
         });
 
-        // 📊 الرسم البياني الثاني: توزيع القوة (مكدس)
         comparisonCharts.strengthDist = new Chart(getElement('siteStrengthDistCanvas'), {
             type: 'bar',
             data: {
@@ -1022,7 +1027,6 @@
             }
         });
         
-        // 📊 الرسم البياني الثالث: مقارنة متوسط مخزون العسل
         comparisonCharts.avgHoney = new Chart(getElement('siteAvgHoneyCanvas'), {
             type: 'bar',
             data: {
@@ -1365,32 +1369,11 @@
         addSiteBtn.onclick = addSite;
         sitesMenu.appendChild(addSiteBtn);
     }
-    
-    function exportSiteData(siteId, siteName) {
-        const data = {};
-        const keysToExport = [
-            `beehiveHistory_v2_${siteId}`,
-            `beehiveTasks_v2_${siteId}`,
-            `sortState_v2_${siteId}`
-        ];
-        keysToExport.forEach(key => {
-            const value = localStorage.getItem(key);
-            if (value) data[key] = value;
-        });
-        
-        if (Object.keys(data).length === 0) return;
-
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-        a.download = `BeehiveData_Site_${siteName.replace(/\s/g, '_')}_${new Date().toISOString().slice(0, 10)}.json`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-    }
 
     function deleteSite(siteId, siteName) {
-        const message = `هل أنت متأكد من حذف الموقع "${siteName}"؟ سيتم تصدير نسخة احتياطية من بياناته تلقائياً قبل الحذف النهائي. لا يمكن التراجع عن هذا الإجراء.`;
+        const message = `هل أنت متأكد من حذف الموقع "${siteName}"؟ سيتم حذف جميع بياناته بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.`;
         showModal('تأكيد حذف الموقع', message, () => {
-            exportSiteData(siteId, siteName);
+            // The automatic export call has been removed from here.
             
             const index = siteIds.indexOf(siteId);
             if (index > -1) siteIds.splice(index, 1);
@@ -1402,7 +1385,7 @@
             
             managers.delete(siteId);
 
-            showNotification(`تم حذف الموقع "${siteName}" وتصدير بياناته.`, 'info', 5000);
+            showNotification(`تم حذف الموقع "${siteName}".`, 'info');
 
             if (activeTabId === siteId) {
                 if (siteIds.length > 0) {
@@ -1527,11 +1510,5 @@
         }
     };
 </script>
-    <p dir="rtl">
-        حقوق الطبع والنشر © 2025 إدارة المناحل. جميع الحقوق محفوظة.
-    </p>
-
-</body>  </html>
-
 </body>
 </html>
