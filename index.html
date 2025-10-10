@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <link rel="stylesheet" href="style.css">
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="theme-color" content="#f39c12"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="images/icon-192x192.png">
+
     <title>إدارة المناحل المتقدمة (نسخة احترافية)</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <style>
         /* CSS: تم الحفاظ على الأنماط الأصلية مع إضافة متغيرات الوضع الليلي */
         :root {
@@ -350,17 +357,17 @@
                            <button id="quick-actions-btn" onclick="toggleQuickActionsMenu()">إجراءات سريعة <i class="fas fa-chevron-down"></i></button>
                         </div>
                         <div id="quick-actions-menu">
-                            <div class="quick-action-item" onclick="performQuickAction(1, 'تم إضافة شمع اساس.', 'frames')"><i class="fas fa-plus" style="color:var(--success-color);"></i> +شمع اساس</div>
-                            <div class="quick-action-item" onclick="performQuickAction(1, 'تم إضافة إطار ممطوط.', 'frames')"><i class="fas fa-plus" style="color:var(--success-color);"></i> +ممطوط</div>
-                            <div class="quick-action-item" onclick="performQuickAction(1, 'تم إضافة إطار حلب.', 'frames')"><i class="fas fa-plus" style="color:var(--success-color);"></i> +حلب</div>
-                            <div class="quick-action-item" onclick="performQuickAction(1, 'تم إضافة إطار عسل.', 'honey')"><i class="fas fa-plus" style="color:var(--success-color);"></i> +عسل</div>
-                            <div class="quick-action-item" onclick="performQuickAction(1, 'تم إضافة إطار كرس.', 'pollen')"><i class="fas fa-plus" style="color:var(--success-color);"></i> +كرس</div>
+                            <div class="quick-action-item" onclick="performQuickAction(1, 'تم إضافة شمع اساس.', 'frames', 0)"><i class="fas fa-plus" style="color:var(--success-color);"></i> +شمع اساس</div>
+                            <div class="quick-action-item" onclick="performQuickAction(1, 'تم إضافة إطار ممطوط.', 'frames', 0)"><i class="fas fa-plus" style="color:var(--success-color);"></i> +ممطوط</div>
+                            <div class="quick-action-item" onclick="performQuickAction(1, 'تم إضافة إطار حلب.', 'frames', 0)"><i class="fas fa-plus" style="color:var(--success-color);"></i> +حلب</div>
+                            <div class="quick-action-item" onclick="performQuickAction(0, 'تم إضافة إطار عسل.', 'honey', 1)"><i class="fas fa-plus" style="color:var(--success-color);"></i> +عسل</div>
+                            <div class="quick-action-item" onclick="performQuickAction(0, 'تم إضافة إطار كرس.', 'pollen', 1)"><i class="fas fa-plus" style="color:var(--success-color);"></i> +كرس</div>
                             <hr style="margin: 2px 0; border-color: var(--border-color);">
-                            <div class="quick-action-item" onclick="performQuickAction(-1, 'تم سحب إطار شمع اساس.', 'frames')"><i class="fas fa-minus" style="color:var(--danger-color);"></i> -شمع اساس</div>
-                            <div class="quick-action-item" onclick="performQuickAction(-1, 'تم سحب إطار ممطوط.', 'frames')"><i class="fas fa-minus" style="color:var(--danger-color);"></i> -ممطوط</div>
-                            <div class="quick-action-item" onclick="performQuickAction(-1, 'تم سحب إطار حلب.', 'frames')"><i class="fas fa-minus" style="color:var(--danger-color);"></i> -حلب</div>
-                            <div class="quick-action-item" onclick="performQuickAction(-1, 'تم سحب إطار عسل.', 'honey', -1)"><i class="fas fa-minus" style="color:var(--danger-color);"></i> -عسل</div>
-                            <div class="quick-action-item" onclick="performQuickAction(-1, 'تم سحب إطار كرس.', 'pollen', -1)"><i class="fas fa-minus" style="color:var(--danger-color);"></i> -كرس</div>
+                            <div class="quick-action-item" onclick="performQuickAction(-1, 'تم سحب إطار شمع اساس.', 'frames', 0)"><i class="fas fa-minus" style="color:var(--danger-color);"></i> -شمع اساس</div>
+                            <div class="quick-action-item" onclick="performQuickAction(-1, 'تم سحب إطار ممطوط.', 'frames', 0)"><i class="fas fa-minus" style="color:var(--danger-color);"></i> -ممطوط</div>
+                            <div class="quick-action-item" onclick="performQuickAction(-1, 'تم سحب إطار حلب.', 'frames', 0)"><i class="fas fa-minus" style="color:var(--danger-color);"></i> -حلب</div>
+                            <div class="quick-action-item" onclick="performQuickAction(0, 'تم سحب إطار عسل.', 'honey', -1)"><i class="fas fa-minus" style="color:var(--danger-color);"></i> -عسل</div>
+                            <div class="quick-action-item" onclick="performQuickAction(0, 'تم سحب إطار كرس.', 'pollen', -1)"><i class="fas fa-minus" style="color:var(--danger-color);"></i> -كرس</div>
                         </div>
                     </div>
                     
@@ -480,21 +487,12 @@
                         <button style="background-color: var(--warning-color);" onclick="showSetPasswordModal()">تغيير كلمة المرور</button>
                     </div>
                     <div class="settings-card">
-                        <h3><i class="fas fa-rocket"></i> الميزات المتقدمة والمستقبلية</h3>
-                        <p>نحن نعمل باستمرار على تطوير التطبيق. إليك بعض الميزات التي نخطط لإضافتها في المستقبل:</p>
-                        <ul style="padding-right: 20px; list-style-type: none;">
-                            <li style="margin-bottom: 8px;"><i class="fas fa-camera-retro" style="margin-left: 8px; color: var(--header-alt-color); width: 20px;"></i> <strong>تحليل صور الحضنة:</strong> استخدام الذكاء الاصطناعي للكشف المبكر عن الأمراض.</li>
-                            <li style="margin-bottom: 8px;"><i class="fas fa-brain" style="margin-left: 8px; color: var(--header-alt-color); width: 20px;"></i> <strong>التحليلات التنبؤية (Predictive Analytics):</strong>
-                                <ul style="padding-right: 45px; list-style-type: circle; margin-top: 5px;">
-                                    <li>توقع التطريد (Swarm Prediction).</li>
-                                    <li>توقع ضعف الخلية (Collapse Risk).</li>
-                                </ul>
-                            </li>
-                            <li style="margin-bottom: 8px;"><i class="fas fa-cloud-sun-rain" style="margin-left: 8px; color: var(--header-alt-color); width: 20px;"></i> <strong>تكامل بيانات الطقس:</strong> ربط التطبيق ببيانات الطقس لتقديم توصيات أكثر دقة.</li>
-                            <li style="margin-bottom: 8px;"><i class="fas fa-thermometer-half" style="margin-left: 8px; color: var(--header-alt-color); width: 20px;"></i> <strong>دعم مستشعرات الخلية (IoT):</strong> ربط مستشعرات لقياس درجة الحرارة والرطوبة عن بعد.</li>
-                            <li style="margin-bottom: 8px;"><i class="fas fa-dollar-sign" style="margin-left: 8px; color: var(--header-alt-color); width: 20px;"></i> <strong>سجل مالي متقدم:</strong> لتتبع التكاليف والأرباح لكل موقع.</li>
-                            <li style="margin-bottom: 8px;"><i class="fas fa-users" style="margin-left: 8px; color: var(--header-alt-color); width: 20px;"></i> <strong>مجتمع النحالين:</strong> قسم خاص لتبادل الخبرات والنصائح بين المستخدمين.</li>
-                        </ul>
+                        <h3><i class="fab fa-google" style="color:#dd4b39;"></i> الربط مع جوجل ومشاركة البيانات</h3>
+                        <p>يمكنك تسجيل الدخول بحساب جوجل لحفظ واستعادة النسخ الاحتياطية مستقبلاً (ميزة قيد التطوير)، أو إرسال نسخة من بياناتك إلى بريدك الإلكتروني.</p>
+                        <div id="google-signin-btn" style="margin-bottom: 10px;"></div>
+                        <div id="user-info" style="display:none; margin-bottom:10px; align-items: center; justify-content: center; gap: 10px; font-weight: bold;"></div>
+                        <button id="email-backup-btn" style="background-color: #c71610;" onclick="sendBackupToEmail()"><i class="fas fa-envelope"></i> إرسال نسخة احتياطية إلى البريد</button>
+                        <p style="font-size: 0.8em; opacity: 0.8; margin-top:10px;">ملاحظة: تحتاج إلى إدخال "معرف العميل" (Client ID) الخاص بك من Google Console في الكود لتعمل ميزة تسجيل الدخول.</p>
                     </div>
                 </div>
             </div>
@@ -505,11 +503,11 @@
                     <button onclick="goBackToDashboard()"><i class="fas fa-arrow-left"></i> العودة للوحة التحكم</button>
                 </div>
                 <div class="analysis-grid">
-                    <div class="chart-container"><h3>توزيع قوة الخلايا</h3><div class="chart-wrapper active-chart" style="min-height: 400px;"><canvas id="globalStrengthCanvas"></canvas></div></div>
+                    <div class="chart-container"><h3>توزيع قوة الخلايا (الحالي)</h3><div class="chart-wrapper active-chart" style="min-height: 400px;"><canvas id="globalStrengthCanvas"></canvas></div></div>
                     <div class="chart-container"><h3>توزيع أعمار الملكات</h3><div class="chart-wrapper active-chart" style="min-height: 400px;"><canvas id="globalQueenAgeCanvas"></canvas></div></div>
                 </div>
                 <div class="analysis-grid" style="margin-top: 20px;">
-                    <div class="chart-container" style="grid-column: 1 / -1;"><h3>متوسط قوة المنحل شهرياً</h3><div class="chart-wrapper active-chart" style="min-height: 400px;"><canvas id="globalMonthlyAvgCanvas"></canvas></div></div>
+                    <div class="chart-container" style="grid-column: 1 / -1;"><h3>متوسط قوة المنحل أسبوعياً</h3><div class="chart-wrapper active-chart" style="min-height: 400px;"><canvas id="globalWeeklyAvgCanvas"></canvas></div></div>
                 </div>
             </div>
             
@@ -555,22 +553,24 @@
 
 <script>
 (function() { // IIFE to encapsulate code and avoid global scope pollution
-    // ######################################################
-    // JAVASCRIPT: V17.1 - Responsive Charts & UI Additions
-    // ######################################################
     
-    // --- IndexedDB Helper ---
+    // --- IndexedDB Helper (النسخة المختصرة) ---
     const DBHelper = (function() {
         const DB_NAME = 'BeehiveDB';
         const DB_VERSION = 1;
         let db;
 
+        function promisifyRequest(request) {
+            return new Promise((resolve, reject) => {
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
         function init() {
             return new Promise((resolve, reject) => {
                 if (db) return resolve(db);
-
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
-
                 request.onupgradeneeded = (event) => {
                     const dbInstance = event.target.result;
                     if (!dbInstance.objectStoreNames.contains('settings')) {
@@ -590,69 +590,40 @@
                         hiveStore.createIndex('siteAndHive', ['siteId', 'hiveId'], { unique: false });
                     }
                 };
-
-                request.onsuccess = (event) => {
-                    db = event.target.result;
-                    resolve(db);
-                };
-
+                request.onsuccess = (event) => { db = event.target.result; resolve(db); };
                 request.onerror = (event) => reject(event.target.error);
             });
         }
 
         function getStore(storeName, mode = 'readonly') {
-            const transaction = db.transaction(storeName, mode);
-            return transaction.objectStore(storeName);
+            return db.transaction(storeName, mode).objectStore(storeName);
         }
 
         return {
             init,
-            get: (storeName, key) => new Promise((resolve, reject) => {
-                const request = getStore(storeName).get(key);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            }),
-            getAll: (storeName, indexName, query) => new Promise((resolve, reject) => {
+            get: (storeName, key) => promisifyRequest(getStore(storeName).get(key)),
+            getAll: (storeName, indexName, query) => {
                 const store = getStore(storeName);
                 const index = indexName ? store.index(indexName) : store;
-                const request = index.getAll(query);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            }),
-            put: (storeName, item) => new Promise((resolve, reject) => {
-                const request = getStore(storeName, 'readwrite').put(item);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            }),
-            add: (storeName, item) => new Promise((resolve, reject) => {
-                const request = getStore(storeName, 'readwrite').add(item);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            }),
-            delete: (storeName, key) => new Promise((resolve, reject) => {
-                const request = getStore(storeName, 'readwrite').delete(key);
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            }),
+                return promisifyRequest(index.getAll(query));
+            },
+            put: (storeName, item) => promisifyRequest(getStore(storeName, 'readwrite').put(item)),
+            add: (storeName, item) => promisifyRequest(getStore(storeName, 'readwrite').add(item)),
+            delete: (storeName, key) => promisifyRequest(getStore(storeName, 'readwrite').delete(key)),
             deleteByIndex: (storeName, indexName, query) => new Promise((resolve, reject) => {
-                const store = getStore(storeName, 'readwrite');
-                const index = store.index(indexName);
-                const request = index.openCursor(query);
+                const request = getStore(storeName, 'readwrite').index(indexName).openCursor(query);
                 request.onsuccess = (event) => {
                     const cursor = event.target.result;
-                    if (cursor) {
-                        cursor.delete();
-                        cursor.continue();
-                    } else { resolve(); }
+                    if (cursor) { cursor.delete(); cursor.continue(); } else { resolve(); }
                 };
                 request.onerror = () => reject(request.error);
             }),
-             // تم إزالة الدالة deleteAll لضمان عدم وجود نقطة دخول لحذف كل شيء
         };
     })();
 
     // --- End IndexedDB Helper ---
 
+    let googleProfile = null;
     const managers = new Map();
     let sites = [];
     let activeSiteId = null;
@@ -663,14 +634,11 @@
 
     const getElement = (id) => document.getElementById(id);
 
-    // Debounce helper function to limit how often a function gets called.
+    // Debounce helper function
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
+            const later = () => { clearTimeout(timeout); func(...args); };
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
@@ -681,30 +649,88 @@
         getActive: () => managers.get(activeSiteId),
     };
     
-    // Make key functions globally accessible from HTML
-    window.toggleSidebar = () => getElement('main-sidebar').classList.toggle('collapsed');
-    window.toggleMenu = (header) => header.nextElementSibling.classList.toggle('open');
-    window.checkPassword = checkPassword;
-    window.showSetPasswordModal = showSetPasswordModal;
-    window.toggleTheme = toggleTheme;
-    window.toggleStarsFeature = toggleStarsFeature;
-    window.toggleRecsFeature = toggleRecsFeature;
-    window.showFormTab = showFormTab;
-    window.toggleQuickActionsMenu = toggleQuickActionsMenu;
-    window.performQuickAction = performQuickAction;
-    window.showChart = showChart;
-    window.updateAnalysisCharts = updateAnalysisCharts;
-    window.showGlobalStatsView = showGlobalStatsView;
-    window.openSite = openSite;
-    window.showSiteComparisonView = showSiteComparisonView;
-    // تم إزالة الدوال: window.importData و window.exportData
-    window.addSite = addSite;
-    window.deleteSite = deleteSite;
-    window.enableSiteRename = enableSiteRename;
-    window.showHiveHistory = showHiveHistory;
-    window.beehiveManager = beehiveManager;
-    window.goBackToDashboard = () => openSite(activeSiteId);
+    // Make key functions globally accessible
+    Object.assign(window, {
+        toggleSidebar: () => getElement('main-sidebar').classList.toggle('collapsed'),
+        toggleMenu: (header) => header.nextElementSibling.classList.toggle('open'),
+        checkPassword, showSetPasswordModal, toggleTheme, toggleStarsFeature,
+        toggleRecsFeature, showFormTab, toggleQuickActionsMenu, performQuickAction,
+        showChart, updateAnalysisCharts, showGlobalStatsView, openSite,
+        showSiteComparisonView, addSite, deleteSite, enableSiteRename,
+        backupSite, showHiveHistory, beehiveManager, sendBackupToEmail,
+        goBackToDashboard: () => openSite(activeSiteId)
+    });
+    
+    // --- Google & Email Backup Functions ---
+    function jwt_decode(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            console.error("Failed to decode JWT", e);
+            return null;
+        }
+    }
 
+    window.handleCredentialResponse = (response) => {
+        const profile = jwt_decode(response.credential);
+        if (!profile) return showNotification('فشل التحقق من حساب جوجل.', 'error');
+        
+        googleProfile = { name: profile.name, email: profile.email, picture: profile.picture };
+        getElement('google-signin-btn').style.display = 'none';
+        const userInfoDiv = getElement('user-info');
+        userInfoDiv.style.display = 'flex';
+        userInfoDiv.innerHTML = `<img src="${googleProfile.picture}" style="width:30px; height:30px; border-radius:50%;"><p style="margin:0;">أهلاً، ${googleProfile.name}</p>`;
+        showNotification(`تم تسجيل الدخول بنجاح كـ ${googleProfile.name}`, 'success');
+    };
+
+    function initializeGoogleSignIn() {
+        try {
+            google.accounts.id.initialize({
+                client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com', // !! استبدل هذا بمعرف العميل الخاص بك
+                callback: handleCredentialResponse
+            });
+            google.accounts.id.renderButton(
+                getElement('google-signin-btn'),
+                { theme: 'outline', size: 'large', type: 'standard', text: 'signin_with', shape: 'rectangular', logo_alignment: 'left', width: '250' }
+            );
+        } catch(e) {
+            console.error("Google Sign-In script failed to initialize.", e);
+            getElement('google-signin-btn').innerHTML = '<p>فشل تحميل خدمة جوجل.</p>';
+        }
+    }
+
+    async function sendBackupToEmail() {
+        if (!activeSiteId) return showNotification('الرجاء تحديد موقع أولاً.', 'warning');
+        const site = await DBHelper.get('sites', activeSiteId);
+        if (!site) return;
+
+        showNotification('جاري تجهيز بيانات النسخ الاحتياطي...', 'info');
+        const data = {
+            site,
+            tasks: await DBHelper.getAll('tasks', 'siteId', activeSiteId),
+            hives: await DBHelper.getAll('hives', 'siteId', activeSiteId)
+        };
+        if (data.hives.length === 0 && data.tasks.length === 0) {
+            return showNotification('لا توجد بيانات لهذا الموقع لإرسالها.', 'warning');
+        }
+
+        const jsonData = JSON.stringify(data, null, 2);
+        const subject = `نسخة احتياطية لبيانات منحل: ${site.name}`;
+        let body = `مرحباً،\n\nهذه نسخة احتياطية من بيانات منحل "${site.name}" تم إنشاؤها بتاريخ ${new Date().toLocaleDateString('ar-EG')}.\n\n--- بداية البيانات ---\n\n${jsonData}\n\n--- نهاية البيانات ---`;
+        const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+        if (mailtoLink.length > 2000) {
+            showNotification('حجم البيانات كبير جداً للإرسال المباشر. استخدم "نسخ احتياطي" للحفظ.', 'error', 8000);
+            backupSite(activeSiteId);
+        } else {
+            window.location.href = mailtoLink;
+        }
+    }
+    
+    // --- UI & Core App Logic ---
     function showNotification(message, type = 'info', duration = 3000) {
         const container = getElement('notification-container');
         const notification = document.createElement('div');
@@ -745,10 +771,8 @@
         const storedPass = storedPassItem ? storedPassItem.value : null;
 
         if (storedPass && storedPass !== currentPass) {
-            showNotification('كلمة المرور الحالية غير صحيحة!', 'error');
-            return;
+            return showNotification('كلمة المرور الحالية غير صحيحة!', 'error');
         }
-
         if (newPass === '') {
             await DBHelper.delete('settings', 'password');
             showNotification('تم إلغاء كلمة المرور بنجاح.', 'success');
@@ -789,9 +813,7 @@
     }
     
     function applyStarsFeature(show) {
-        document.querySelectorAll('.star-feature').forEach(el => {
-            el.classList.toggle('feature-hidden', !show);
-        });
+        document.querySelectorAll('.star-feature').forEach(el => el.classList.toggle('feature-hidden', !show));
         if (!show && getElement('stars-tab').classList.contains('active')) {
             beehiveManager.getActive().showMainTab('dashboard-tab');
         }
@@ -804,9 +826,7 @@
     }
 
     function applyRecsFeature(show) {
-        document.querySelectorAll('.recommendation-feature').forEach(el => {
-            el.classList.toggle('feature-hidden', !show);
-        });
+        document.querySelectorAll('.recommendation-feature').forEach(el => el.classList.toggle('feature-hidden', !show));
     }
 
     async function toggleRecsFeature() {
@@ -846,9 +866,9 @@
         }
         if (globalCharts.strength) globalCharts.strength.options = { ...globalCharts.strength.options, ...commonOptions };
         if (globalCharts.queenAge) globalCharts.queenAge.options = { ...globalCharts.queenAge.options, plugins: { legend: { labels: { color: textColor } } } };
-        if (globalCharts.monthlyAvg) {
-             globalCharts.monthlyAvg.options = { ...globalCharts.monthlyAvg.options, ...commonOptions };
-             globalCharts.monthlyAvg.data.datasets[0].borderColor = headerColor;
+        if (globalCharts.weeklyAvg) {
+             globalCharts.weeklyAvg.options = { ...globalCharts.weeklyAvg.options, ...commonOptions };
+             globalCharts.weeklyAvg.data.datasets[0].borderColor = headerColor;
         }
         if (comparisonCharts.avgStrength) comparisonCharts.avgStrength.options = { ...comparisonCharts.avgStrength.options, ...commonOptions };
         if (comparisonCharts.strengthDist) comparisonCharts.strengthDist.options = { ...comparisonCharts.strengthDist.options, ...commonOptions };
@@ -884,30 +904,31 @@
         menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
 
-    function performQuickAction(frameChange, note, targetType, stockChange = 1) {
+    function performQuickAction(frameChange, note, targetType, stockChange) {
         const selectedIds = Array.from(document.querySelectorAll('.hive-select-checkbox:checked')).map(cb => parseInt(cb.dataset.hiveId));
         const manager = beehiveManager.getActive();
 
         if (selectedIds.length > 0) {
             showModal({
                 title: 'تطبيق إجراء جماعي',
-                message: `سيتم تطبيق هذا الإجراء على ${selectedIds.length} خلية محددة. سيتم إضافة سجل فحص جديد لكل خلية. هل أنت متأكد؟`,
+                message: `سيتم تطبيق هذا الإجراء على ${selectedIds.length} خلية محددة. هل أنت متأكد؟`,
                 onConfirm: async () => {
                     await manager.applyBulkAction(selectedIds, frameChange, note, targetType, stockChange);
-                    showNotification(`تم تطبيق الإجراء على ${selectedIds.length} خلية بنجاح.`, 'success');
+                    showNotification(`تم تطبيق الإجراء على ${selectedIds.length} خلية.`, 'success');
                     manager.refreshUI();
                     hideModal();
                 }
             });
         } else {
             const notesInput = getElement('notes');
-            if (frameChange !== 0 && targetType === 'frames') {
+            if (frameChange !== 0) {
                 const framesInput = getElement('frames');
-                const currentValue = parseInt(framesInput.value) || 5;
-                framesInput.value = Math.max(1, currentValue + frameChange);
+                framesInput.value = Math.max(1, (parseInt(framesInput.value) || 5) + frameChange);
             }
-            if (targetType === 'honey') getElement('honey-frames').value = Math.max(0, (parseInt(getElement('honey-frames').value) || 0) + stockChange);
-            else if (targetType === 'pollen') getElement('pollen-frames').value = Math.max(0, (parseInt(getElement('pollen-frames').value) || 0) + stockChange);
+            if (stockChange !== 0) {
+                if (targetType === 'honey') getElement('honey-frames').value = Math.max(0, (parseInt(getElement('honey-frames').value) || 0) + stockChange);
+                else if (targetType === 'pollen') getElement('pollen-frames').value = Math.max(0, (parseInt(getElement('pollen-frames').value) || 0) + stockChange);
+            }
             notesInput.value = notesInput.value.trim() ? `${notesInput.value}\n${note}` : note;
         }
         toggleQuickActionsMenu();
@@ -933,6 +954,16 @@
         document.querySelectorAll('.form-tabs .form-tab-button').forEach(b => b.classList.remove('active'));
         getElement(`${tabId}-form`).classList.add('active');
         buttonElement.classList.add('active');
+    }
+    
+    // --- Charting Functions ---
+    
+    // Helper function to get ISO week number
+    function getWeekNumber(d) {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
 
     function initializeAnalysisCharts() {
@@ -969,15 +1000,11 @@
 
         const history = await manager.loadHistoryForHive(hiveId);
         
-        // Original full data
         const fullLabels = history.map(rec => new Date(rec.date).toLocaleDateString('ar-EG'));
         const fullFramesData = history.map(rec => rec.frames);
         const fullHealthData = history.map(rec => manager.calculateHealthScore(rec));
 
-        // Sampled data for small screens
-        let displayLabels = fullLabels;
-        let displayFramesData = fullFramesData;
-        let displayHealthData = fullHealthData;
+        let displayLabels = fullLabels, displayFramesData = fullFramesData, displayHealthData = fullHealthData;
 
         if (window.innerWidth < 768 && fullLabels.length > 6) {
             const step = Math.ceil(fullLabels.length / 6);
@@ -1050,32 +1077,26 @@
 
         const recommendations = [];
         const totalHives = hives.length;
-
         const weakHives = hives.filter(h => h.frames < 4).length;
         if ((weakHives / totalHives) > 0.3) {
             recommendations.push({ type: 'warning', title: 'ضعف عام في المنحل', text: `يوجد ${weakHives} خلية ضعيفة (${Math.round((weakHives/totalHives)*100)}%). يوصى ببدء برنامج تغذية عام ودعم الخلايا الضعيفة بإطارات حضنة من القوية.` });
         }
-
         const queenlessHives = hives.filter(h => h.queenStatus !== 'ملكة').length;
         if ((queenlessHives / totalHives) > 0.2) {
              recommendations.push({ type: 'danger', title: 'مشاكل في التطريد أو فقدان الملكات', text: `يوجد ${queenlessHives} خلية بدون ملكة أو مكذبة. يجب التدخل السريع بإضافة ملكات أو ضم الخلايا.` });
         }
-
         const oldQueens = hives.filter(h => h.queenYear && (new Date().getFullYear() - parseInt(h.queenYear)) >= 2).length;
         if ((oldQueens / totalHives) > 0.4) {
              recommendations.push({ type: 'info', title: 'كثرة الملكات كبيرة السن', text: `${Math.round((oldQueens/totalHives)*100)}% من ملكات المنحل عمرها سنتان أو أكثر. يفضل التخطيط لحملة تغيير ملكات لزيادة الإنتاجية.` });
         }
-        
         const totalHoney = hives.reduce((sum, h) => sum + (h.honeyFrames || 0), 0);
-        const avgHoney = totalHoney / totalHives;
+        const avgHoney = totalHives > 0 ? totalHoney / totalHives : 0;
         if (avgHoney < 1.5) {
              recommendations.push({ type: 'deficit', title: 'نقص عام في مخزون العسل', text: `متوسط مخزون العسل في الخلايا منخفض (${avgHoney.toFixed(1)} إطار). يجب المراقبة والتفكير في تغذية تكميلية إذا استمر النقص.` });
         }
-
         if (recommendations.length === 0) {
             recommendations.push({ type: 'success', title: 'المنحل في حالة جيدة ومستقرة', text: 'لا توجد مشاكل عامة تتطلب تدخلاً عاجلاً. استمر في المراقبة الدورية.' });
         }
-
         recommendations.forEach(rec => {
             list.innerHTML += `<div class="recommendation-card ${rec.type}"><h4>${rec.title}</h4><p>${rec.text}</p></div>`;
         });
@@ -1087,13 +1108,12 @@
         getElement('global-stats-view').style.display = 'block';
         const site = await DBHelper.get('sites', activeSiteId);
         getElement('active-location-title').textContent = `إحصائيات شاملة - ${site.name}`;
-        renderGlobalCharts();
+        await renderGlobalCharts();
     }
 
     async function renderGlobalCharts() {
-        // Destroy existing charts to prevent memory leaks and redraw issues
         Object.values(globalCharts).forEach(chart => chart.destroy());
-        globalCharts = {}; // Reset the object
+        globalCharts = {};
 
         const manager = beehiveManager.getActive();
         const latestHives = await manager.loadHives();
@@ -1120,30 +1140,27 @@
             options: { responsive: true, maintainAspectRatio: false }
         });
 
-        // 3. Monthly Average Strength Trend
-        const monthlyAvg = {};
+        // 3. Weekly Average Strength Trend
+        const weeklyAvg = {};
         fullHistory.forEach(rec => {
-            const monthKey = rec.date.substring(0, 7);
-            monthlyAvg[monthKey] = monthlyAvg[monthKey] || [];
-            monthlyAvg[monthKey].push(rec.frames);
+            const d = new Date(rec.date);
+            const weekKey = `${d.getFullYear()}-W${getWeekNumber(d).toString().padStart(2, '0')}`;
+            weeklyAvg[weekKey] = weeklyAvg[weekKey] || [];
+            weeklyAvg[weekKey].push(rec.frames);
         });
+        const fullWeeklyLabels = Object.keys(weeklyAvg).sort();
+        const fullWeeklyData = fullWeeklyLabels.map(w => weeklyAvg[w].reduce((a, b) => a + b, 0) / weeklyAvg[w].length);
         
-        // Original full data for monthly average
-        const fullMonthlyLabels = Object.keys(monthlyAvg).sort();
-        const fullMonthlyData = fullMonthlyLabels.map(m => monthlyAvg[m].reduce((a, b) => a + b, 0) / monthlyAvg[m].length);
-        
-        // Sampled data for small screens
-        let displayMonthlyLabels = fullMonthlyLabels;
-        let displayMonthlyData = fullMonthlyData;
+        let displayWeeklyLabels = fullWeeklyLabels, displayWeeklyData = fullWeeklyData;
 
-        if (window.innerWidth < 768 && fullMonthlyLabels.length > 6) {
-            const step = Math.ceil(fullMonthlyLabels.length / 6);
-            displayMonthlyLabels = fullMonthlyLabels.filter((_, i) => i % step === 0);
-            displayMonthlyData = fullMonthlyData.filter((_, i) => i % step === 0);
+        if (window.innerWidth < 768 && fullWeeklyLabels.length > 8) {
+            const step = Math.ceil(fullWeeklyLabels.length / 8);
+            displayWeeklyLabels = fullWeeklyLabels.filter((_, i) => i % step === 0);
+            displayWeeklyData = fullWeeklyData.filter((_, i) => i % step === 0);
         }
 
-        globalCharts.monthlyAvg = new Chart(getElement('globalMonthlyAvgCanvas'), {
-            type: 'line', data: { labels: displayMonthlyLabels, datasets: [{ label: 'متوسط عدد الإطارات', data: displayMonthlyData, tension: 0.1, fill: false }] },
+        globalCharts.weeklyAvg = new Chart(getElement('globalWeeklyAvgCanvas'), {
+            type: 'line', data: { labels: displayWeeklyLabels, datasets: [{ label: 'متوسط عدد الإطارات', data: displayWeeklyData, tension: 0.1, fill: false }] },
             options: { responsive: true, maintainAspectRatio: false }
         });
         
@@ -1158,7 +1175,7 @@
         getElement('active-location-title').textContent = 'مقارنة شاملة بين جميع المواقع';
 
         Object.values(comparisonCharts).forEach(chart => chart.destroy());
-        comparisonCharts = {}; // Reset the object
+        comparisonCharts = {};
 
         const comparisonData = [];
         for (const site of sites) {
@@ -1220,12 +1237,11 @@
             const [month, day] = dateStr.split('-').map(Number);
             return month * 100 + day;
         };
-        let currentSeason = null;
-        for (const season of starSeasons) {
-            const startKey = dateToKey(season.start); const endKey = dateToKey(season.end);
-            if (startKey > endKey) { if (todayKey >= startKey || todayKey <= endKey) { currentSeason = season; break; } }
-            else { if (todayKey >= startKey && todayKey <= endKey) { currentSeason = season; break; } }
-        }
+        let currentSeason = starSeasons.find(season => {
+            const startKey = dateToKey(season.start);
+            const endKey = dateToKey(season.end);
+            return startKey > endKey ? (todayKey >= startKey || todayKey <= endKey) : (todayKey >= startKey && todayKey <= endKey);
+        });
         
         let html = '';
         if (currentSeason) {
@@ -1236,7 +1252,6 @@
         
         html += `<h3><i class="fas fa-forward"></i> المواسم القادمة</h3><div class="upcoming-seasons-grid">`;
         let seasonIndex = starSeasons.findIndex(s => s === currentSeason);
-        if (seasonIndex === -1) seasonIndex = 0;
         for (let i = 1; i <= 4; i++) {
             const upcoming = starSeasons[(seasonIndex + i) % starSeasons.length];
             html += `<div class="upcoming-card"><h4>${upcoming.name} (نجم ${upcoming.star})</h4><p>يبدأ تقريباً في: ${upcoming.start.split('-').reverse().join('/')}</p></div>`;
@@ -1245,6 +1260,7 @@
         contentDiv.innerHTML = html;
     }
 
+    // BeehiveManager Class... (remains mostly the same)
     function BeehiveManager(siteId) {
         this.siteId = siteId;
         this.sortState = { column: 2, direction: 'desc' };
@@ -1289,14 +1305,15 @@
         this.applyBulkAction = async (hiveIds, frameChange, note, targetType, stockChange) => {
             const allHives = await this.loadHives();
             const selectedHives = allHives.filter(h => hiveIds.includes(h.hiveId));
-
             for (const lastRecord of selectedHives) {
                 const newRecord = { ...lastRecord };
-                delete newRecord.recordId; // Let IndexedDB auto-increment the primary key
+                delete newRecord.recordId;
                 newRecord.date = new Date().toISOString();
-                newRecord.frames = Math.max(1, newRecord.frames + frameChange);
-                if (targetType === 'honey') newRecord.honeyFrames = Math.max(0, (newRecord.honeyFrames || 0) + stockChange);
-                if (targetType === 'pollen') newRecord.pollenFrames = Math.max(0, (newRecord.pollenFrames || 0) + stockChange);
+                if (frameChange !== 0) newRecord.frames = Math.max(1, newRecord.frames + frameChange);
+                if (stockChange !== 0) {
+                   if (targetType === 'honey') newRecord.honeyFrames = Math.max(0, (newRecord.honeyFrames || 0) + stockChange);
+                   if (targetType === 'pollen') newRecord.pollenFrames = Math.max(0, (newRecord.pollenFrames || 0) + stockChange);
+                }
                 newRecord.notes = note;
                 await DBHelper.add('hives', newRecord);
             }
@@ -1330,9 +1347,8 @@
         
         this.getStockStatus = (hive) => {
             const honey = hive.honeyFrames || 0, pollen = hive.pollenFrames || 0;
-            const requiredHoney = 2, requiredPollen = 1, excessThreshold = 3;
-            if (honey < requiredHoney || pollen < requiredPollen) return `<span style="color: var(--deficit-color); font-weight: bold;">⚠️ نقص (${honey}/${pollen})</span>`;
-            if (honey > requiredHoney + excessThreshold || pollen > requiredPollen + 1) return `<span style="color: var(--excess-color); font-weight: bold;">✅ فائض (${honey}/${pollen})</span>`;
+            if (honey < 2 || pollen < 1) return `<span style="color: var(--deficit-color); font-weight: bold;">⚠️ نقص (${honey}/${pollen})</span>`;
+            if (honey > 5 || pollen > 2) return `<span style="color: var(--excess-color); font-weight: bold;">✅ فائض (${honey}/${pollen})</span>`;
             return `متوازن (${honey}/${pollen})`;
         };
 
@@ -1342,14 +1358,10 @@
             const filterValue = getElement('hive-filter-input').value.toLowerCase();
 
             if (filterValue) {
-                const filteredHives = [];
-                for (const hive of latestHives) {
+                latestHives = await Promise.all(latestHives.map(async hive => {
                     const notesLog = await getFullNotesLog(hive.hiveId);
-                    if (String(hive.hiveId).includes(filterValue) || notesLog.toLowerCase().includes(filterValue)) {
-                        filteredHives.push(hive);
-                    }
-                }
-                latestHives = filteredHives;
+                    return String(hive.hiveId).includes(filterValue) || notesLog.toLowerCase().includes(filterValue) ? hive : null;
+                })).then(results => results.filter(Boolean));
             }
 
             this.sortHives(latestHives, this.sortState.column, this.sortState.direction);
@@ -1446,8 +1458,8 @@
             this.displayDashboard(); 
             this.displayHives(); 
             this.displayTasks();
-            const recsFeature = await DBHelper.get('settings', 'recsFeature');
-            if (recsFeature && recsFeature.value) {
+            const recsFeature = (await DBHelper.get('settings', 'recsFeature'))?.value ?? false;
+            if (recsFeature) {
                  generateSiteRecommendations(this);
             } else {
                  getElement('site-recommendations-list').innerHTML = '';
@@ -1466,13 +1478,10 @@
             if (tabId === 'analysis-tab') {
                 initializeAnalysisCharts();
                 await populateHiveSelector();
-                const selector = getElement('hive-analysis-selector');
-                if (selector.options.length > 1) selector.selectedIndex = 1;
                 updateAnalysisCharts();
-                const firstChartButton = document.querySelector('#analysis-tab .chart-section .tab-button');
-                if (firstChartButton && !firstChartButton.classList.contains('active')) firstChartButton.click();
             }
             if (tabId === 'stars-tab') updateStarCalculator();
+            if(tabId === 'settings-tab') initializeGoogleSignIn();
         };
 
         this.sortHives = (hives, col, dir) => {
@@ -1501,24 +1510,22 @@
         };
     }
     
+    // ... Other site management functions (showHiveHistory, enableSiteRename etc.)
     async function showHiveHistory(hiveId) {
         const manager = beehiveManager.getActive();
         const history = await manager.loadHistoryForHive(hiveId);
         if (history.length === 0) return showNotification('لا يوجد سجل لهذه الخلية.', 'info');
         
         let historyHTML = `
-            <div class="table-wrapper">
-                <table style="min-width: 100%;">
-                    <thead><tr><th>التاريخ</th><th>الإطارات</th><th>حالة الملكة</th><th>المخزون (ع/ك)</th><th>الملاحظات</th></tr></thead>
-                    <tbody>${history.slice().reverse().map(rec => `
-                        <tr>
-                            <td>${new Date(rec.date).toLocaleDateString('ar-EG', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                            <td>${rec.frames}</td>
-                            <td>${rec.queenStatus}</td>
-                            <td>${rec.honeyFrames || 0}/${rec.pollenFrames || 0}</td>
-                            <td style="text-align: right; white-space: pre-wrap;">${rec.notes || '-'}</td>
-                        </tr>`).join('')}
-                    </tbody></table></div>`;
+            <div class="table-wrapper"><table style="min-width: 100%;">
+                <thead><tr><th>التاريخ</th><th>الإطارات</th><th>حالة الملكة</th><th>المخزون (ع/ك)</th><th>الملاحظات</th></tr></thead>
+                <tbody>${history.slice().reverse().map(rec => `
+                    <tr>
+                        <td>${new Date(rec.date).toLocaleDateString('ar-EG', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                        <td>${rec.frames}</td><td>${rec.queenStatus}</td><td>${rec.honeyFrames || 0}/${rec.pollenFrames || 0}</td>
+                        <td style="text-align: right; white-space: pre-wrap;">${rec.notes || '-'}</td>
+                    </tr>`).join('')}
+                </tbody></table></div>`;
         
         showModal({ title: `سجل الخلية رقم ${hiveId}`, customHTML: historyHTML, showConfirm: false, cancelText: 'إغلاق' });
     }
@@ -1527,7 +1534,6 @@
         const originalName = spanElement.textContent;
         const input = document.createElement('input');
         input.type = 'text'; input.className = 'site-name-input'; input.value = originalName;
-        
         const saveName = async () => {
             const newName = input.value.trim();
             if (newName && newName !== originalName) {
@@ -1538,13 +1544,11 @@
             }
             createSiteButtons(); 
         };
-
         input.addEventListener('blur', saveName);
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') input.blur();
-            if (e.key === 'Escape') createSiteButtons();
+            if (e.key === 'Escape') { input.value = originalName; input.blur(); }
         });
-
         spanElement.style.display = 'none';
         spanElement.parentNode.insertBefore(input, spanElement.nextSibling);
         input.focus();
@@ -1556,15 +1560,11 @@
         sites.forEach(site => {
             const button = document.createElement('button');
             button.className = 'site-button';
-            button.onclick = (e) => {
-                if (e.target.closest('.site-button-controls')) return;
-                openSite(site.id);
-            };
-            // Note: Using a unique innerHTML to allow array find in openSite, which is a bit hacky but works for now
+            button.onclick = (e) => { if (!e.target.closest('.site-button-controls')) openSite(site.id); };
             button.innerHTML = `
-                <i class="fas fa-warehouse"></i> 
-                <span class="sidebar-text site-name-span">${site.name}</span>
+                <i class="fas fa-warehouse"></i> <span class="sidebar-text site-name-span">${site.name}</span>
                 <div class="site-button-controls">
+                    <button class="site-control-btn" onclick="backupSite('${site.id}')" title="نسخ احتياطي"><i class="fas fa-download"></i></button>
                     <button class="site-control-btn" onclick="enableSiteRename('${site.id}', this.parentNode.previousElementSibling)" title="إعادة تسمية"><i class="fas fa-pencil-alt"></i></button>
                     <button class="site-control-btn" onclick="deleteSite('${site.id}', '${site.name}')" title="حذف"><i class="fas fa-trash-alt" style="color:var(--danger-color)"></i></button>
                 </div>`;
@@ -1577,29 +1577,37 @@
         sitesMenu.appendChild(addSiteBtn);
     }
     
+    async function backupSite(siteId) {
+        const site = await DBHelper.get('sites', siteId);
+        const data = { site, tasks: await DBHelper.getAll('tasks', 'siteId', siteId), hives: await DBHelper.getAll('hives', 'siteId', siteId) };
+        if (data.hives.length === 0 && data.tasks.length === 0) {
+            return showNotification('لا توجد بيانات لهذا الموقع لإنشاء نسخة احتياطية.', 'warning');
+        }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+        a.download = `BeehiveBackup_${site.name}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showNotification(`تم تصدير بيانات الموقع "${site.name}" بنجاح.`, 'success');
+    }
+
     function deleteSite(siteId, siteName) {
-        const message = `للتأكيد، الرجاء كتابة اسم الموقع "${siteName}" في الحقل أدناه. سيتم حذف جميع بياناته بشكل نهائي.`;
         showModal({
             title: `تأكيد حذف الموقع: ${siteName}`,
-            message: message,
+            message: `للتأكيد، الرجاء كتابة اسم الموقع "${siteName}" في الحقل أدناه. سيتم حذف جميع بياناته بشكل نهائي.`,
             customHTML: `<input type="text" id="delete-confirm-input" placeholder="اكتب اسم الموقع هنا" style="margin-top:10px;">`,
             confirmText: 'حذف نهائي',
             onConfirm: async () => {
                 if (getElement('delete-confirm-input').value !== siteName) return showNotification('الاسم الذي أدخلته غير مطابق!', 'error');
-                
                 await DBHelper.delete('sites', siteId);
                 await DBHelper.deleteByIndex('hives', 'siteId', siteId);
                 await DBHelper.deleteByIndex('tasks', 'siteId', siteId);
-                
                 managers.delete(siteId);
                 showNotification(`تم حذف الموقع "${siteName}" بشكل نهائي.`, 'info');
                 hideModal();
-
                 sites = sites.filter(s => s.id !== siteId);
-                
                 if (activeSiteId === siteId) {
-                    if (sites.length > 0) openSite(sites[0].id);
-                    else addSite(); 
+                    if (sites.length > 0) openSite(sites[0].id); else addSite(); 
                 }
                 createSiteButtons();
             }
@@ -1610,9 +1618,7 @@
         const newId = 'site_' + Date.now();
         const siteCount = (await DBHelper.getAll('sites')).length;
         const newSite = { id: newId, name: `الموقع ${siteCount + 1}` };
-        
         await DBHelper.add('sites', newSite);
-        
         sites.push(newSite);
         managers.set(newId, new BeehiveManager(newId));
         createSiteButtons();
@@ -1621,11 +1627,7 @@
     }
 
     async function openSite(siteId) {
-        if (!managers.has(siteId)) {
-            // Re-create manager if it was deleted/not initialized correctly
-            managers.set(siteId, new BeehiveManager(siteId));
-        }
-
+        if (!managers.has(siteId)) { managers.set(siteId, new BeehiveManager(siteId)); }
         activeSiteId = siteId;
         await DBHelper.put('settings', { key: 'activeSiteId', value: siteId });
         
@@ -1637,8 +1639,7 @@
         getElement('active-location-title').textContent = site.name;
         
         document.querySelectorAll('.site-button').forEach(btn => btn.classList.remove('active'));
-        // Find the button by its siteId, using a more robust method than innerHTML.includes
-        const activeButton = Array.from(document.querySelectorAll('.site-button')).find(btn => btn.onclick.toString().includes(`openSite('${siteId}')`));
+        const activeButton = Array.from(document.querySelectorAll('.site-button')).find(btn => btn.innerHTML.includes(site.name));
         if (activeButton) activeButton.classList.add('active');
 
         const manager = beehiveManager.getActive();
@@ -1647,63 +1648,7 @@
         manager.showMainTab('dashboard-tab');
     }
     
-    // --- Data Migration from localStorage to IndexedDB ---
-    async function migrateDataFromLocalStorage() {
-        const migrationFlag = 'localStorageMigrationDone_v1';
-        if (localStorage.getItem(migrationFlag)) return;
-        
-        let migratedCount = 0;
-        const lsKeys = Object.keys(localStorage);
-        const siteHistoryKeys = lsKeys.filter(k => k.startsWith('beehiveHistory_v2_'));
-
-        if (siteHistoryKeys.length === 0) {
-            localStorage.setItem(migrationFlag, 'true');
-            return; // No old data to migrate
-        }
-        
-        showNotification('جاري ترقية قاعدة البيانات... قد يستغرق هذا بعض الوقت.', 'info', 10000);
-
-        const tabNames = JSON.parse(localStorage.getItem('beehiveTabNames_v3') || '{}');
-        const siteIds = JSON.parse(localStorage.getItem('beehiveSitesList_v3') || '[]');
-
-        for (const siteId of siteIds) {
-            const siteName = tabNames[siteId] || `الموقع ${siteId.slice(-4)}`;
-            await DBHelper.put('sites', {id: siteId, name: siteName });
-            
-            const history = JSON.parse(localStorage.getItem(`beehiveHistory_v2_${siteId}`) || '{}');
-            for (const hiveId in history) {
-                for (const record of history[hiveId]) {
-                    await DBHelper.add('hives', { ...record, hiveId: record.id, siteId: siteId });
-                    migratedCount++;
-                }
-            }
-            const tasks = JSON.parse(localStorage.getItem(`beehiveTasks_v2_${siteId}`) || '[]');
-            for (const taskText of tasks) {
-                await DBHelper.add('tasks', { text: taskText, siteId: siteId });
-            }
-        }
-        
-        const settingsToMigrate = {
-            theme: 'beehiveTheme_v2', password: 'beehivePassword_v2',
-            starsFeature: 'beehiveStarsFeature_v1', recsFeature: 'beehiveRecsFeature_v1',
-            activeSiteId: 'beehiveActiveTabId_v3'
-        };
-        for (const [newKey, oldKey] of Object.entries(settingsToMigrate)) {
-            const value = localStorage.getItem(oldKey);
-            if (value !== null) {
-                let parsedValue = value;
-                if (oldKey.includes('Feature')) parsedValue = (value === 'true');
-                await DBHelper.put('settings', { key: newKey, value: parsedValue });
-            }
-        }
-        
-        // Cleanup old localStorage keys
-        lsKeys.filter(k => k.startsWith('beehive')).forEach(k => localStorage.removeItem(k));
-        localStorage.setItem(migrationFlag, 'true');
-        showNotification(`اكتملت الترقية بنجاح! تم نقل ${migratedCount} سجل.`, 'success', 5000);
-        setTimeout(() => window.location.reload(), 1500); // Reload to ensure app uses new data structure
-    }
-
+    // --- App Initialization ---
     async function initializeApp() {
         const theme = (await DBHelper.get('settings', 'theme'))?.value || 'light';
         applyTheme(theme);
@@ -1718,8 +1663,8 @@
         
         sites = await DBHelper.getAll('sites');
         if (sites.length === 0) {
-            await addSite(); // Creates the first site if none exist
-            return; // addSite will call openSite and finish setup
+            await addSite();
+            return;
         }
 
         sites.forEach(site => managers.set(site.id, new BeehiveManager(site.id)));
@@ -1729,19 +1674,14 @@
         const siteToOpen = sites.find(s => s.id === lastActiveSite) ? lastActiveSite : sites[0].id;
         openSite(siteToOpen);
 
-        getElement('hive-filter-input').addEventListener('keyup', () => beehiveManager.getActive().displayHives());
+        getElement('hive-filter-input').addEventListener('keyup', debounce(() => beehiveManager.getActive().displayHives(), 300));
         getElement('select-all-hives').addEventListener('change', (e) => {
             document.querySelectorAll('.hive-select-checkbox').forEach(cb => cb.checked = e.target.checked);
         });
 
-        // Add resize listener to handle responsive charts
         window.addEventListener('resize', debounce(() => {
-            if (chartsInitialized && getElement('analysis-tab').classList.contains('active')) {
-                updateAnalysisCharts();
-            }
-            if (Object.keys(globalCharts).length > 0 && getElement('global-stats-view').style.display === 'block') {
-                renderGlobalCharts();
-            }
+            if (getElement('analysis-tab').classList.contains('active')) updateAnalysisCharts();
+            if (getElement('global-stats-view').style.display === 'block') renderGlobalCharts();
         }, 250));
     }
     
@@ -1749,10 +1689,11 @@
         try {
             await DBHelper.init();
             
-            // Check for and run one-time data migration if needed
-            if (localStorage.getItem('beehiveSitesList_v3') || localStorage.getItem('beehiveHistory_v2_1')) {
-                await migrateDataFromLocalStorage();
-                return; // Migration will force a reload, so we stop execution here.
+            // Register PWA Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered', reg))
+                    .catch(err => console.error('Service Worker registration failed', err));
             }
 
             const passwordItem = await DBHelper.get('settings', 'password');
