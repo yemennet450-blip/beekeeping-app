@@ -798,8 +798,8 @@
 
     function importData() {
         showModal({
-            title: 'استيراد البيانات',
-            message: '⚠️ تحذير: سيؤدي استيراد البيانات إلى حذف جميع بياناتك الحالية واستبدالها بالكامل بالبيانات الموجودة في الملف. هذا الإجراء لا يمكن التراجع عنه.',
+            title: 'دمج البيانات',
+            message: 'سيتم دمج البيانات من الملف مع بياناتك الحالية. سيتم تحديث السجلات الموجودة وإضافة أي سجلات جديدة. هذا الإجراء لا يمكن التراجع عنه.',
             confirmText: 'أفهم، متابعة',
             onConfirm: () => {
                 hideModal();
@@ -817,18 +817,18 @@
                             const isValid = DBHelper.STORES.every(store => Array.isArray(importedData[store]));
                             if (!isValid) throw new Error('تنسيق الملف غير صالح أو تالف.');
                             
-                            // Clear existing data and import new data
+                            // Merge new data
                             for (const storeName of DBHelper.STORES) {
-                                await DBHelper.clear(storeName);
+                                // await DBHelper.clear(storeName); // <-- THIS LINE IS REMOVED TO MERGE DATA
                                 for (const item of importedData[storeName]) {
-                                    await DBHelper.put(storeName, item);
+                                    await DBHelper.put(storeName, item); // 'put' will update existing or add new items
                                 }
                             }
-                            showNotification('تم استيراد البيانات بنجاح! سيتم إعادة تحميل التطبيق.', 'success', 4000);
+                            showNotification('تم دمج البيانات بنجاح! سيتم إعادة تحميل التطبيق.', 'success', 4000);
                             setTimeout(() => window.location.reload(), 4000);
 
                         } catch (error) {
-                            showNotification('فشل استيراد البيانات: ' + error.message, 'error');
+                            showNotification('فشل دمج البيانات: ' + error.message, 'error');
                         }
                     };
                     reader.readAsText(file);
@@ -898,7 +898,7 @@
         
         if (!storedPass || input.value === storedPass) {
             getElement('password-modal').style.display = 'none';
-            document.body.classList.remove('app-hidden');
+            getElement('main-app-content').classList.remove('app-hidden');
             initializeApp();
         } else {
             showNotification('كلمة المرور غير صحيحة.', 'error');
@@ -1821,7 +1821,7 @@
             
             const passwordItem = await DBHelper.get('settings', 'password');
             if (passwordItem && passwordItem.value) {
-                document.body.classList.add('app-hidden');
+                getElement('main-app-content').classList.add('app-hidden');
                 getElement('password-modal').style.display = 'flex';
             } else {
                 initializeApp();
