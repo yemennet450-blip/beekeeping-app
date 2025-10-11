@@ -317,6 +317,20 @@
             font-size: 24px;
             color: var(--header-color);
         }
+        
+        /* Voice Command Button */
+        #voice-command-btn {
+            background-color: var(--info-color);
+        }
+        #voice-command-btn.listening {
+            background-color: var(--danger-color);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
 
         @media (max-width: 768px) {
             .main-content-wrapper { flex-direction: column; }
@@ -444,6 +458,7 @@
                         <h2>إضافة / تعديل خلية</h2>
                         <div>
                            <button onclick="beehiveManager.getActive().refreshUI()" style="background-color: var(--info-color);" title="تحديث البيانات يدوياً"><i class="fas fa-sync-alt"></i> تحديث</button>
+                           <button id="voice-command-btn" onclick="voiceCommands.toggleListening()" title="تفعيل الأوامر الصوتية"><i class="fas fa-microphone"></i> <span id="voice-status"></span></button>
                            <button id="quick-actions-btn" onclick="toggleQuickActionsMenu()">إجراءات سريعة <i class="fas fa-chevron-down"></i></button>
                         </div>
                         <div id="quick-actions-menu">
@@ -687,6 +702,151 @@
 <div id="notification-container"></div>
 
 <script>
+// --- START VOICE COMMANDS MODULE ---
+const voiceCommands = (() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        console.log("Speech Recognition not supported.");
+        return {
+            toggleListening: () => showNotification("متصفحك لا يدعم الأوامر الصوتية.", "error")
+        };
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.lang = 'ar-SA';
+    recognition.interimResults = false;
+    let isListening = false;
+    const voiceBtn = getElement('voice-command-btn');
+
+    const numberMap = {
+        'صفر': 0, 'واحد': 1, 'اثنين': 2, 'اثنان': 2, 'ثلاثة': 3, 'ثلاث': 3, 'أربعة': 4, 'اربع': 4, 'خمسة': 5, 'خمس': 5,
+        'ستة': 6, 'ست': 6, 'سبعة': 7, 'سبع': 7, 'ثمانية': 8, 'ثمان': 8, 'تسعة': 9, 'تسع': 9, 'عشرة': 10, 'عشر': 10
+    };
+
+    recognition.onstart = () => {
+        isListening = true;
+        voiceBtn.classList.add('listening');
+        showNotification("الأوامر الصوتية مفعلة. أنا أستمع...", "info");
+    };
+
+    recognition.onend = () => {
+        isListening = false;
+        voiceBtn.classList.remove('listening');
+        showNotification("تم إيقاف الأوامر الصوتية.", "info", 2000);
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        let message = "حدث خطأ في التعرف على الصوت.";
+        if (event.error === 'not-allowed') {
+            message = "الرجاء السماح بالوصول إلى الميكروفون.";
+        } else if (event.error === 'no-speech') {
+            message = "لم يتم اكتشاف أي كلام. حاول مرة أخرى.";
+        }
+        showNotification(message, "error");
+        stopListening();
+    };
+
+    recognition.onresult = (event) => {
+        const last = event.results.length - 1;
+        const command = event.results[last][0].transcript.trim().toLowerCase();
+        console.log('Voice Command Received:', command);
+        processCommand(command);
+    };
+
+    function processCommand(command) {
+        // Command: Set Hive ID
+        if (command.startsWith('خليه رقم') || command.startsWith('خلية رقم')) {
+            const number = parseInt(command.replace(/[^0-9]/g, ''), 10);
+            if (!isNaN(number)) {
+                getElement('hive-id').value = number;
+                showNotification(`تم تعيين رقم الخلية إلى ${number}`, "success");
+            }
+        }
+        // Command: Set Frames
+        else if (command.includes('اطارات') || command.includes('إطارات') || command.includes('اطار') || command.includes('إطار')) {
+             const parts = command.split(' ');
+             const numStr = parts[0];
+             const number = numberMap[numStr] !== undefined ? numberMap[numStr] : parseInt(numStr, 10);
+             if (!isNaN(number) && number >= 1 && number <= 10) {
+                 getElement('frames').value = number;
+                 showNotification(`تم تعيين عدد الإطارات إلى ${number}`, "success");
+             }
+        }
+        // Command: Set Queen Status
+        else if (command.startsWith('حاله الملكه') || command.startsWith('حالة الملكة')) {
+            if (command.includes('بها ملكه') || command.includes('بها ملكة')) {
+                getElement('queen-status').value = 'ملكة';
+                showNotification('تم تعيين حالة الملكة: بها ملكة', 'success');
+            } else if (command.includes('بدون ملكه') || command.includes('بدون ملكة')) {
+                getElement('queen-status').value = 'بدون ملكة';
+                showNotification('تم تعيين حالة الملكة: بدون ملكة', 'success');
+            } else if (command.includes('مكذبه') || command.includes('مكذبة')) {
+                getElement('queen-status').value = 'مكذبة';
+                showNotification('تم تعيين حالة الملكة: مكذبة', 'success');
+            }
+        }
+        // Command: Set Queen Year
+        else if (command.startsWith('سنه الملكه') || command.startsWith('سنة الملكة')) {
+            const year = parseInt(command.replace(/[^0-9]/g, ''), 10);
+            if (!isNaN(year) && year > 2000) {
+                getElement('queen-year').value = year;
+                showNotification(`تم تعيين سنة الملكة إلى ${year}`, "success");
+            }
+        }
+        // Command: Add Note
+        else if (command.startsWith('اضافه ملاحظه') || command.startsWith('إضافة ملاحظة')) {
+            const note = command.replace('اضافه ملاحظه', '').replace('إضافة ملاحظة', '').trim();
+            if (note) {
+                getElement('notes').value += (getElement('notes').value ? '\n' : '') + note;
+                showNotification(`تم إضافة ملاحظة: "${note}"`, "success");
+            }
+        }
+        // Command: Save
+        else if (command.includes('حفظ الفحص') || command.includes('حفظ السجل')) {
+            beehiveManager.getActive().saveHive();
+        }
+        // Command: Clear
+        else if (command.includes('مسح البيانات') || command.includes('خليه جديده') || command.includes('خلية جديدة')) {
+            beehiveManager.getActive().clearInputs();
+            showNotification('تم مسح الحقول.', 'success');
+        }
+        // Command: Stop
+        else if (command.includes('ايقاف') || command.includes('إيقاف')) {
+            stopListening();
+        }
+        else {
+            showNotification(`أمر غير معروف: "${command}"`, 'warning');
+        }
+    }
+
+    function startListening() {
+        if (!isListening) {
+            recognition.start();
+        }
+    }
+
+    function stopListening() {
+        if (isListening) {
+            recognition.stop();
+        }
+    }
+
+    function toggleListening() {
+        if (isListening) {
+            stopListening();
+        } else {
+            startListening();
+        }
+    }
+
+    return {
+        toggleListening
+    };
+})();
+// --- END VOICE COMMANDS MODULE ---
+
 (function(){const DBHelper=function(){const e="BeehiveDB",t=1;let n;const s=["settings","sites","tasks","hives"];function o(e){return new Promise((t,n)=>{e.onsuccess=()=>t(e.result),e.onerror=()=>n(e.error)})}function a(){return new Promise((a,c)=>{if(n)return a(n);const r=indexedDB.open(e,t);r.onupgradeneeded=e=>{const t=e.target.result;t.objectStoreNames.contains("settings")||t.createObjectStore("settings",{keyPath:"key"}),t.objectStoreNames.contains("sites")||t.createObjectStore("sites",{keyPath:"id"}),t.objectStoreNames.contains("tasks")||t.createObjectStore("tasks",{keyPath:"id",autoIncrement:!0}).createIndex("siteId","siteId",{unique:!1}),t.objectStoreNames.contains("hives")||t.createObjectStore("hives",{keyPath:"recordId",autoIncrement:!0}).createIndex("siteId","siteId",{unique:!1}).createIndex("hiveId","hiveId",{unique:!1}).createIndex("siteAndHive",["siteId","hiveId"],{unique:!1})},r.onsuccess=e=>{n=e.target.result,a(n)},r.onerror=e=>c(e.target.error)})}function c(e,t="readonly"){return n.transaction(e,t).objectStore(e)}return{init:a,STORES:s,get:(e,t)=>o(c(e).get(t)),getAll:(e,t,n)=>{const s=c(e),a=t?s.index(t):s;return o(a.getAll(n))},put:(e,t)=>o(c(e,"readwrite").put(t)),add:(e,t)=>o(c(e,"readwrite").add(t)),delete:(e,t)=>o(c(e,"readwrite").delete(t)),clear:e=>o(c(e,"readwrite").clear()),deleteByIndex:(e,t,n)=>new Promise((s,a)=>{const r=c(e,"readwrite").index(t).openCursor(n);r.onsuccess=e=>{const t=e.target.result;t?(t.delete(),t.continue()):s()},r.onerror=()=>a(r.error)})}}();const managers=new Map;let sites=[],activeSiteId=null,analysisCharts={},chartsInitialized=!1,globalCharts={},comparisonCharts={};const getElement=e=>document.getElementById(e);function debounce(e,t){let n;return function(...s){const o=()=>{clearTimeout(n),e(...s)};clearTimeout(n),n=setTimeout(o,t)}}const beehiveManager={get:e=>managers.get(e),getActive:()=>managers.get(activeSiteId)};async function exportData(){const e={};for(const t of DBHelper.STORES)e[t]=await DBHelper.getAll(t);Object.values(e).every(e=>0===e.length)?showNotification("لا توجد بيانات لتصديرها.","warning"):showExportModal(JSON.stringify(e,null,2))}function showExportModal(e){showModal({title:"تصدير / نسخ احتياطي للبيانات",message:"يمكنك مشاركة بياناتك مع تطبيق آخر لحفظها كملف، أو نسخها يدويًا ولصقها في مكان آمن.",customHTML:`<textarea readonly style="width: 100%; height: 200px; margin-bottom: 15px; font-family: monospace; direction: ltr; background-color: var(--bg-color); color: var(--text-color);">${e}</textarea>\n                         <div id="export-actions" style="display: flex; gap: 10px; justify-content: center;"></div>`,showConfirm:!1,cancelText:"إغلاق"});const t=getElement("export-actions");if(navigator.share){const n=document.createElement("button");n.innerHTML='<i class="fas fa-share-alt"></i> مشاركة البيانات',n.onclick=()=>{navigator.share({title:`نسخة احتياطية من بيانات المنحل - ${new Date().toLocaleDateString()}`,text:e}).then(()=>showNotification("تمت المشاركة بنجاح!","success")).catch(e=>console.log("خطأ في المشاركة:",e))},t.appendChild(n)}const n=document.createElement("button");n.innerHTML='<i class="fas fa-copy"></i> نسخ إلى الحافظة',n.style.backgroundColor="var(--info-color)",n.onclick=()=>{navigator.clipboard.writeText(e).then(()=>{showNotification("تم نسخ البيانات إلى الحافظة بنجاح!","success"),n.innerHTML='<i class="fas fa-check"></i> تم النسخ!',setTimeout(()=>{n.innerHTML='<i class="fas fa-copy"></i> نسخ إلى الحافظة'},2e3)}).catch(e=>showNotification("فشل النسخ!","error"))},t.appendChild(n)}
 function importData(){showModal({title:"دمج البيانات",message:"سيتم دمج البيانات من الملف مع بياناتك الحالية. سيتم تحديث السجلات الموجودة وإضافة أي سجلات جديدة. هذا الإجراء لا يمكن التراجع عنه.",confirmText:"أفهم، متابعة",onConfirm:()=>{hideModal();const e=document.createElement("input");e.type="file",e.accept=".json,text/plain",e.onchange=t=>{const n=t.target.files[0];if(!n)return;const s=new FileReader;s.onload=async t=>{try{const n=JSON.parse(t.target.result);if(!DBHelper.STORES.every(e=>Array.isArray(n[e])))throw new Error("تنسيق الملف غير صالح أو تالف.");const s=await DBHelper.getAll("sites"),o=new Map(s.map(e=>[e.name.toLowerCase(),e.id])),a={};if(n.sites)for(const e of n.sites){const t=e.name.toLowerCase();o.has(t)?a[e.id]=o.get(t):(await DBHelper.put("sites",e),a[e.id]=e.id)}const c=["hives","tasks"];for(const e of c)if(n[e])for(const t of n[e])t.siteId&&a[t.siteId]&&(t.siteId=a[t.siteId]),await DBHelper.put(e,t);if(n.settings)for(const e of n.settings)await DBHelper.put("settings",e);showNotification("تم دمج البيانات بنجاح! سيتم إعادة تحميل التطبيق.","success",4e3),setTimeout(()=>window.location.reload(),4e3)}catch(e){showNotification("فشل دمج البيانات: "+e.message,"error")}},s.readAsText(n)},e.click()}})}function showNotification(e,t="info",n=3e3){const s=getElement("notification-container"),o=document.createElement("div");o.className=`notification ${t}`;let a="fas fa-info-circle";"success"===t&&(a="fas fa-check-circle"),"warning"===t&&(a="fas fa-exclamation-triangle"),"error"===t&&(a="fas fa-times-circle"),o.innerHTML=`<i class="${a}"></i><span>${e}</span>`,s.appendChild(o),setTimeout(()=>{o.style.opacity="0",o.style.transform="translateX(-120%)",setTimeout(()=>o.remove(),500)},n)}function showSetPasswordModal(){showModal({title:"تعيين/تغيير كلمة المرور",message:"كلمة المرور الحالية مطلوبة للتأكيد، اتركها فارغة إذا لم تكن موجودة.",customHTML:'\n                <input type="password" id="current-password-input" placeholder="كلمة المرور الحالية (إذا وجدت)" style="margin-bottom: 10px;">\n                <input type="password" id="new-password-input" placeholder="كلمة المرور الجديدة">\n                <p style="font-size: 0.8em; color: var(--warning-color);">اترك الحقلين فارغين لإلغاء كلمة المرور.</p>\n            ',confirmText:"حفظ",onConfirm:()=>{setPassword(),hideModal()}})}async function setPassword(){const e=getElement("current-password-input").value,t=getElement("new-password-input").value,n=await DBHelper.get("settings","password"),s=n?n.value:null;s&&s!==e?showNotification("كلمة المرور الحالية غير صحيحة!","error"):""===t?(await DBHelper.delete("settings","password"),showNotification("تم إلغاء كلمة المرور بنجاح.","success")):(await DBHelper.put("settings",{key:"password",value:t}),showNotification("تم حفظ كلمة المرور بنجاح.","success"))}async function checkPassword(){const e=getElement("password-input"),t=(await DBHelper.get("settings","password"))?.value;t&&e.value!==t?(showNotification("كلمة المرور غير صحيحة.","error"),e.value=""): (getElement("password-modal").style.display="none",getElement("main-app-content").classList.remove("app-hidden"),initializeApp())}async function applyTheme(e){document.body.classList.toggle("dark-mode","dark"===e),getElement("theme-checkbox").checked="dark"===e,updateChartColors(),chartsInitialized&&Object.values(analysisCharts).forEach(e=>e.update()),Object.keys(globalCharts).length>0&&Object.values(globalCharts).forEach(e=>e.update()),Object.keys(comparisonCharts).length>0&&Object.values(comparisonCharts).forEach(e=>e.update())}async function toggleTheme(){const e=document.body.classList.contains("dark-mode")?"light":"dark";await DBHelper.put("settings",{key:"theme",value:e}),applyTheme(e)}function applyStarsFeature(e){document.querySelectorAll(".star-feature").forEach(t=>t.classList.toggle("feature-hidden",!e)),!e&&getElement("stars-tab").classList.contains("active")&&beehiveManager.getActive().showMainTab("dashboard-tab")}async function toggleStarsFeature(){const e=getElement("stars-feature-checkbox").checked;await DBHelper.put("settings",{key:"starsFeature",value:e}),applyStarsFeature(e)}function applyRecsFeature(e){document.querySelectorAll(".recommendation-feature").forEach(t=>t.classList.toggle("feature-hidden",!e))}async function toggleRecsFeature(){const e=getElement("recs-feature-checkbox").checked;await DBHelper.put("settings",{key:"recsFeature",value:e}),applyRecsFeature(e),beehiveManager.getActive()&&beehiveManager.getActive().refreshUI()}function updateChartColors(){const e=getComputedStyle(document.body).getPropertyValue("--text-color"),t=getComputedStyle(document.body).getPropertyValue("--header-color"),n=getComputedStyle(document.body).getPropertyValue("--success-color"),s=getComputedStyle(document.body).getPropertyValue("--info-color"),o={scales:{x:{ticks:{color:e},grid:{color:"rgba(128,128,128,0.1)"}},y:{ticks:{color:e},grid:{color:"rgba(128,128,128,0.1)"}}},plugins:{legend:{labels:{color:e}}}};analysisCharts.frames&&(analysisCharts.frames.options={...analysisCharts.frames.options,...o,plugins:{...o.plugins,title:{display:!0,text:"تطور قوة الخلية (بالإطارات)",color:e}}},analysisCharts.frames.data.datasets[0].borderColor=t),analysisCharts.health&&(analysisCharts.health.options={...analysisCharts.health.options,...o,plugins:{...o.plugins,title:{display:!0,text:"تطور صحة الخلية",color:e}}},analysisCharts.health.data.datasets[0].borderColor=n),analysisCharts.queenAge&&(analysisCharts.queenAge.options={...analysisCharts.queenAge.options,...o,plugins:{...o.plugins,title:{display:!0,text:"علاقة عمر الملكة بقوة الخلية",color:e}}},analysisCharts.queenAge.data.datasets[0].backgroundColor=s),globalCharts.strength&&(globalCharts.strength.options={...globalCharts.strength.options,...o}),globalCharts.queenAge&&(globalCharts.queenAge.options={...globalCharts.queenAge.options,plugins:{legend:{labels:{color:e}}}}),globalCharts.weeklyAvg&&(globalCharts.weeklyAvg.options={...globalCharts.weeklyAvg.options,...o},globalCharts.weeklyAvg.data.datasets[0].borderColor=t),comparisonCharts.avgStrength&&(comparisonCharts.avgStrength.options={...comparisonCharts.avgStrength.options,...o}),comparisonCharts.strengthDist&&(comparisonCharts.strengthDist.options={...comparisonCharts.strengthDist.options,...o}),comparisonCharts.avgHoney&&(comparisonCharts.avgHoney.options={...comparisonCharts.avgHoney.options,...o})}function showModal({title:e,message:t,onConfirm:n,showConfirm:s=!0,confirmText:o="تأكيد",customHTML:a="",cancelText:c="إلغاء"}){getElement("modal-title").textContent=e,getElement("modal-message").textContent=t,getElement("modal-custom-content").innerHTML=a;const r=getElement("custom-modal");r.style.display="flex";const i=getElement("modal-confirm-btn"),l=getElement("modal-cancel-btn"),d=r.querySelector(".modal-close-btn"),u=i.cloneNode(!0);i.parentNode.replaceChild(u,i),u.textContent=o,u.style.display=s?"flex":"none",u.onclick=()=>{n()},l.textContent=c,l.onclick=hideModal,d.onclick=hideModal}function hideModal(){getElement("custom-modal").style.display="none"}function toggleQuickActionsMenu(){const e=getElement("quick-actions-menu");e.style.display="block"===e.style.display?"none":"block"}function performQuickAction(e,t,n,s){const o=Array.from(document.querySelectorAll(".hive-select-checkbox:checked")).map(e=>parseInt(e.dataset.hiveId)),a=beehiveManager.getActive();if(o.length>0)showModal({title:"تطبيق إجراء جماعي",message:`سيتم تطبيق هذا الإجراء على ${o.length} خلية محددة. هل أنت متأكد؟`,onConfirm:async()=>{await a.applyBulkAction(o,e,t,n,s),showNotification(`تم تطبيق الإجراء على ${o.length} خلية.`,"success"),a.refreshUI(),hideModal()}});else{const o=getElement("notes");0!==e&&changeValue("frames",e),0!==s&&("honey"===n?changeValue("honey-frames",s):"pollen"===n&&changeValue("pollen-frames",s)),o.value=o.value.trim()?`${o.value}\n${t}`:t}toggleQuickActionsMenu()}function showChart(e,t){document.querySelectorAll(".chart-wrapper").forEach(e=>e.classList.remove("active-chart")),document.querySelectorAll(".chart-section .tab-button").forEach(e=>e.classList.remove("active")),getElement(`${e}-chart`).classList.add("active-chart"),t.classList.add("active")}function showFormTab(e,t){document.querySelectorAll(".form-tab-content").forEach(e=>e.classList.remove("active")),document.querySelectorAll(".form-tabs .form-tab-button").forEach(e=>e.classList.remove("active")),getElement(`${e}-form`).classList.add("active"),t.classList.add("active")}function initializeAnalysisCharts(){if(chartsInitialized)return void updateChartColors();const e={responsive:!0,maintainAspectRatio:!1};analysisCharts.frames=new Chart(getElement("framesTrendCanvas"),{type:"line",data:{labels:[],datasets:[{label:"عدد الإطارات",data:[],tension:.1}]},options:e}),analysisCharts.health=new Chart(getElement("healthTrendCanvas"),{type:"line",data:{labels:[],datasets:[{label:"درجة الصحة (%)",data:[],tension:.1}]},options:e}),analysisCharts.queenAge=new Chart(getElement("queenAgeCanvas"),{type:"scatter",data:{datasets:[{label:"عمر الملكة (سنوات)",data:[]}]},options:e}),chartsInitialized=!0,updateChartColors()}async function populateHiveSelector(){const e=getElement("hive-analysis-selector");e.innerHTML='<option value="">-- اختر خلية --</option>';(await beehiveManager.getActive().getUniqueHiveIds()).forEach(t=>{e.innerHTML+=`<option value="${t}">خلية رقم ${t}</option>`})}async function updateAnalysisCharts(){const e=getElement("hive-analysis-selector").value,t=beehiveManager.getActive();if(!e||!chartsInitialized)return Object.values(analysisCharts).forEach(e=>{e.data.labels=[],e.data.datasets.forEach(e=>e.data=[]),e.update()}),void(getElement("recommendations-list").innerHTML='<p style="text-align: center; color: var(--text-color);">اختر خلية من القائمة لبدء التحليل.</p>');const n=await t.loadHistoryForHive(e),s=n.map(e=>(new Date(e.date)).toLocaleDateString("ar-EG")),o=n.map(e=>e.frames),a=n.map(e=>t.calculateHealthScore(e));let c=s;window.innerWidth<768&&s.length>6&&(c=s.filter((e,t)=>t%Math.ceil(s.length/6)==0)),analysisCharts.frames.data.labels=c,analysisCharts.frames.data.datasets[0].data=o,analysisCharts.frames.update(),analysisCharts.health.data.labels=c,analysisCharts.health.data.datasets[0].data=a,analysisCharts.health.update();const r=n.map(e=>{if(e.queenYear)return{x:(new Date(e.date)).getFullYear()-parseInt(e.queenYear),y:e.frames}}).filter(Boolean);analysisCharts.queenAge.data.datasets[0].data=r,analysisCharts.queenAge.options.scales.x.title={display:!0,text:"عمر الملكة (سنوات)"},analysisCharts.queenAge.options.scales.y.title={display:!0,text:"عدد الإطارات"},analysisCharts.queenAge.update(),generateHiveRecommendations(t,n)}function getCurrentStarSeason(){const e=new Date,t=100*(e.getMonth()+1)+e.getDate();return starSeasons.find(e=>{const n=(e=>100*Number(e.split("-")[0])+Number(e.split("-")[1]))(e.start),s=n(e.end);return n>s?t>=n||t<=s:t>=n&&t<=s})}function generateHiveRecommendations(e,t){const n=getElement("recommendations-list");if(n.innerHTML="",0===t.length)return void(n.innerHTML='<p class="recommendation-card info">لا توجد بيانات كافية للتحليل.</p>');const s=[];let o=t[t.length-1];if(t.length>1){const e=getCurrentStarSeason(),n="بدء التوسعة الربيعية"===e?.name,a=o.queenYear?(new Date).getFullYear()-parseInt(o.queenYear):0;if(n&&o.frames>=7&&a>=1){const e=new Date((new Date).getTime()-1296e6),n=t.slice().reverse().find(t=>new Date(t.date)<=e);if(n){const t=o.frames-n.frames;t>=3&&s.push({type:"danger",title:"🚨 توقع التطريد",text:`تنبيه: خطر تطريد مرتفع! الخلية قوية، الملكة ليست صغيرة، والنمو سريع (+${t} إطارات في آخر أسبوعين). افحص بيوت الملكات فوراً.`})}}}if(t.length>=3){const n=t.slice(-3),a=e.calculateHealthScore(n[2]),c=e.calculateHealthScore(n[1]),r=e.calculateHealthScore(n[0]);a<c&&c<r&&(o.honeyFrames||0)<2&&s.push({type:"danger",title:"📉 توقع ضعف وانهيار الخلية",text:"تنبيه: الخلية في تدهور مستمر وصحة الطائفة تتناقص مع نقص حاد في المخزون. تحتاج لدعم فوري بالتغذية وإطارات حضنة لتجنب انهيارها."})}const a=e.calculateHealthScore(o),{frames:c,honeyFrames:r=0,pollenFrames:i=0}=o;r>5&&s.push({type:"excess",title:"فائض كبير في العسل",text:`الخلية لديها ${r} إطار عسل. يجب سحب الفائض فوراً للاستفادة منه وتوفير مساحة للملكة.`}),r<2&&s.push({type:"deficit",title:"نقص في مخزون العسل",text:`الخلية لديها ${r} إطار عسل فقط. يرجى التغذية فوراً لتجنب موت النحل جوعاً.`}),i>3&&s.push({type:"excess",title:"فائض في الكرس",text:`الخلية لديها ${i} إطار كرس. يمكن استخدامه لدعم خلايا أخرى أضعف في المنحل.`}),i<1&&s.push({type:"deficit",title:"نقص في مخزون الكرس",text:`الخلية لديها ${i} إطار كرس فقط. يرجى توفير بدائل حبوب اللقاح لدعم الحضنة.`}),a<60&&s.push({type:"danger",title:"صحة الخلية ضعيفة",text:`درجة الصحة الحالية ${a}%. يرجى مراجعة سجل الملاحظات للبحث عن أمراض أو آفات.`}),c<4&&s.push({type:"warning",title:"الخلية ضعيفة جداً",text:`تحتوي على ${c} إطارات. يوصى بتغذية مكثفة أو ضمها لخلية أخرى.`}),"بدون ملكة"===o.queenStatus&&s.push({type:"danger",title:"الخلية يتيمة!",text:"يجب إضافة ملكة جديدة أو بيت ملكي أو ضمها فوراً قبل أن تكذب."}),"مكذبة"===o.queenStatus&&s.push({type:"danger",title:"توقف: الخلية مكذبة!",text:"يجب نفض النحل بعيداً وضم الخلية لخلية قوية لإنقاذ النحل المتبقي."});const l=(new Date).getFullYear()-(o.queenYear?parseInt(o.queenYear):(new Date).getFullYear());l>=2&&s.push({type:"info",title:"الاستعداد لتغيير الملكة",text:`عمر الملكة ${l} سنوات. يفضل تغييرها في الموسم القادم لزيادة النشاط.`}),c>=8&&a>80&&s.push({type:"success",title:"الخلية قوية ومزدهرة",text:"هذه الخلية ممتازة. يمكن التفكير في تقسيمها أو إضافة عاسلة لجمع العسل."}),0===s.length&&s.push({type:"success",title:"الخلية بحالة جيدة ومستقرة",text:"لا توجد ملاحظات أو إجراءات عاجلة مطلوبة."}),s.forEach(e=>{n.innerHTML+=`<div class="recommendation-card ${e.type}"><h4>${e.title}</h4><p>${e.text}</p></div>`})}async function generateSiteRecommendations(e){const t=getElement("site-recommendations-list");t.innerHTML="";const n=await e.loadHives();if(0===n.length)return void(t.innerHTML='<p class="recommendation-card info">لا توجد خلايا في هذا الموقع لتقديم توصيات عامة.</p>');const s=[],o=n.length,a=n.filter(e=>e.frames<4).length;a/o>.3&&s.push({type:"warning",title:"ضعف عام في المنحل",text:`يوجد ${a} خلية ضعيفة (${Math.round(a/o*100)}%). يوصى ببدء برنامج تغذية عام ودعم الخلايا الضعيفة بإطارات حضنة من القوية.`});const c=n.filter(e=>"ملكة"!==e.queenStatus).length;c/o>.2&&s.push({type:"danger",title:"مشاكل في التطريد أو فقدان الملكات",text:`يوجد ${c} خلية بدون ملكة أو مكذبة. يجب التدخل السريع بإضافة ملكات أو ضم الخلايا.`});const r=n.filter(e=>e.queenYear&&(new Date).getFullYear()-parseInt(e.queenYear)>=2).length;r/o>.4&&s.push({type:"info",title:"كثرة الملكات كبيرة السن",text:`${Math.round(r/o*100)}% من ملكات المنحل عمرها سنتان أو أكثر. يفضل التخطيط لحملة تغيير ملكات لزيادة الإنتاجية.`});const i=n.reduce((e,t)=>e+(t.honeyFrames||0),0),l=o>0?i/o:0;l<1.5&&s.push({type:"deficit",title:"نقص عام في مخزون العسل",text:`متوسط مخزون العسل في الخلايا منخفض (${l.toFixed(1)} إطار). يجب المراقبة والتفكير في تغذية تكميلية إذا استمر النقص.`}),0===s.length&&s.push({type:"success",title:"المنحل في حالة جيدة ومستقرة",text:"لا توجد مشاكل عامة تتطلب تدخلاً عاجلاً. استمر في المراقبة الدورية."}),s.forEach(e=>{t.innerHTML+=`<div class="recommendation-card ${e.type}"><h4>${e.title}</h4><p>${e.text}</p></div>`})}async function showGlobalStatsView(){getElement("standard-view-wrapper").style.display="none",getElement("site-comparison-view").style.display="none",getElement("global-stats-view").style.display="block";const e=await DBHelper.get("sites",activeSiteId);getElement("active-location-title").textContent=`إحصائيات شاملة - ${e.name}`,await renderGlobalCharts()}async function renderGlobalCharts(){Object.values(globalCharts).forEach(e=>e.destroy()),globalCharts={};const e=beehiveManager.getActive(),t=await e.loadHives(),n=await e.loadHistory();const s={"ضعيفة (1-3)":0,"متوسطة (4-6)":0,"قوية (7+)":0};t.forEach(e=>{e.frames<=3?s["ضعيفة (1-3)"]++:e.frames<=6?s["متوسطة (4-6)"]++:s["قوية (7+)"]++}),globalCharts.strength=new Chart(getElement("globalStrengthCanvas"),{type:"bar",data:{labels:Object.keys(s),datasets:[{data:Object.values(s),backgroundColor:["rgba(231, 76, 60, 0.6)","rgba(241, 196, 15, 0.6)","rgba(39, 174, 96, 0.6)"],borderWidth:1}]},options:{responsive:!0,maintainAspectRatio:!1,plugins:{legend:{display:!1}}}});const o={};t.forEach(e=>{o[e.queenYear||"غير معروف"]=(o[e.queenYear||"غير معروف"]||0)+1});const a=Object.keys(o).sort((e,t)=>t.localeCompare(e));globalCharts.queenAge=new Chart(getElement("globalQueenAgeCanvas"),{type:"doughnut",data:{labels:a,datasets:[{data:a.map(e=>o[e]),backgroundColor:["#3498db","#2ecc71","#f1c40f","#e74c3c","#9b59b6","#34495e"]}]},options:{responsive:!0,maintainAspectRatio:!1}});const c={};n.forEach(e=>{const t=new Date(e.date),n=`${t.getFullYear()}-${(t.getMonth()+1).toString().padStart(2,"0")}`;c[n]=c[n]||[],c[n].push(e.frames)});const r=Object.keys(c).sort(),i=r.map(e=>c[e].reduce((e,t)=>e+t,0)/c[e].length);let l=r;window.innerWidth<768&&r.length>8&&(l=r.filter((e,t)=>t%Math.ceil(r.length/8)==0)),globalCharts.weeklyAvg=new Chart(getElement("globalWeeklyAvgCanvas"),{type:"line",data:{labels:l,datasets:[{label:"متوسط عدد الإطارات",data:i,tension:.1,fill:!1}]},options:{responsive:!0,maintainAspectRatio:!1}});const d=(await DBHelper.get("settings","theme"))?.value||"light";applyTheme(d)}async function showSiteComparisonView(){getElement("standard-view-wrapper").style.display="none",getElement("global-stats-view").style.display="none",getElement("site-comparison-view").style.display="block",getElement("active-location-title").textContent="مقارنة شاملة بين جميع المواقع",Object.values(comparisonCharts).forEach(e=>e.destroy()),comparisonCharts={};const e=[];for(const t of sites){const n=beehiveManager.get(t.id),s=await n.loadHives();if(0===s.length)continue;const o={strong:0,medium:0,weak:0,totalHoney:0,totalFrames:0};s.forEach(e=>{o.totalFrames+=e.frames,o.totalHoney+=e.honeyFrames||0,e.frames>6?o.strong++:e.frames<4?o.weak++:o.medium++}),e.push({name:t.name,avgStrength:(o.totalFrames/s.length).toFixed(1),avgHoney:(o.totalHoney/s.length).toFixed(1),strongPct:o.strong/s.length*100,mediumPct:o.medium/s.length*100,weakPct:o.weak/s.length*100})}const t=e.map(e=>e.name);comparisonCharts.avgStrength=new Chart(getElement("siteAvgStrengthCanvas"),{type:"bar",data:{labels:t,datasets:[{label:"متوسط عدد الإطارات",data:e.map(e=>e.avgStrength),backgroundColor:"rgba(52, 152, 219, 0.7)"}]},options:{responsive:!0,maintainAspectRatio:!1,scales:{y:{beginAtZero:!0}}}}),comparisonCharts.strengthDist=new Chart(getElement("siteStrengthDistCanvas"),{type:"bar",data:{labels:t,datasets:[{label:"خلايا قوية (%)",data:e.map(e=>e.strongPct),backgroundColor:"rgba(39, 174, 96, 0.7)"},{label:"خلايا متوسطة (%)",data:e.map(e=>e.mediumPct),backgroundColor:"rgba(241, 196, 15, 0.7)"},{label:"خلايا ضعيفة (%)",data:e.map(e=>e.weakPct),backgroundColor:"rgba(231, 76, 60, 0.7)"}]},options:{responsive:!0,maintainAspectRatio:!1,scales:{x:{stacked:!0},y:{stacked:!0,max:100,ticks:{callback:e=>e+"%"}}}}}),comparisonCharts.avgHoney=new Chart(getElement("siteAvgHoneyCanvas"),{type:"bar",data:{labels:t,datasets:[{label:"متوسط إطارات العسل المختوم",data:e.map(e=>e.avgHoney),backgroundColor:"rgba(243, 156, 18, 0.7)"}]},options:{responsive:!0,maintainAspectRatio:!1,scales:{y:{beginAtZero:!0}}}});const n=(await DBHelper.get("settings","theme"))?.value||"light";applyTheme(n)}const starSeasons=[{star:"الشبط",start:"01-28",end:"02-20",name:"التشتية (البرد القارس)",desc:"يتوقف النشاط، وتنكمش الحضنة، ويجب التأكد من وجود المخزون الكافي.",tips:["عدم فتح الخلايا أبداً إلا للحالات الطارئة جداً.","التأكد من أن مدخل الخلية ضيق جداً لحفظ الدفء.","عزل الخلايا خارجياً وتفقد المخزون من الخارج (وزن الخلية) للتأكد من كفايته."]},
 {star:"العقارب",start:"02-21",end:"06-04",name:"بدء التوسعة الربيعية",desc:"يبدأ النحل بالتوسع، تنطلق الأزهار البرية، ويكون الشغل الشاغل هو تجديد الشمع وتقوية الخلايا.",tips:["البدء بإضافة إطارات شمع أساس لتجديد الشمع فور بدء التوسع.","مراقبة النحل لتفادي التطريد بزيادة الإطارات أو التقسيم.","توفير مصدر ماء نقي قريب من المنحل."]},
