@@ -724,7 +724,6 @@
         showSiteComparisonView, addSite, deleteSite, enableSiteRename,
         showHiveHistory, beehiveManager, changeValue,
         goBackToDashboard: () => openSite(activeSiteId),
-        // 🚀 إضافة الوظائف الجديدة هنا
         importData, exportData
     });
     
@@ -740,7 +739,6 @@
     }
     
     // 🚀 --- START: Import/Export Functions --- 🚀
-
     async function exportData() {
         const data = {};
         for (const storeName of DBHelper.STORES) {
@@ -819,7 +817,6 @@
                             
                             // Merge new data
                             for (const storeName of DBHelper.STORES) {
-                                // await DBHelper.clear(storeName); // <-- THIS LINE IS REMOVED TO MERGE DATA
                                 for (const item of importedData[storeName]) {
                                     await DBHelper.put(storeName, item); // 'put' will update existing or add new items
                                 }
@@ -837,7 +834,6 @@
             }
         });
     }
-
     // 🚀 --- END: Import/Export Functions --- 🚀
 
     function showNotification(message, type = 'info', duration = 3000) {
@@ -1100,8 +1096,7 @@
         const fullFramesData = history.map(rec => rec.frames);
         const fullHealthData = history.map(rec => manager.calculateHealthScore(rec));
 
-        let displayLabels = fullLabels, displayFramesData = fullFramesData, displayHealthData = fullHealthData;
-
+        let displayLabels = fullLabels;
         if (window.innerWidth < 768 && fullLabels.length > 6) {
             const step = Math.ceil(fullLabels.length / 6);
             displayLabels = fullLabels.filter((_, i) => i % step === 0);
@@ -1142,43 +1137,41 @@
     }
 
     function generateHiveRecommendations(managerInstance, history) {
-        const latestHive = history[history.length - 1];
         const list = getElement('recommendations-list');
         list.innerHTML = '';
-        if (!latestHive) {
+        if (history.length === 0) {
             list.innerHTML = '<p class="recommendation-card info">لا توجد بيانات كافية للتحليل.</p>';
             return;
         }
+
         const recommendations = [];
+        const latestHive = history[history.length - 1];
 
-        // --- START: New Predictive Logic ---
-
+        // --- START: Predictive AI Logic ---
         // 1. Swarming Prediction
-        if (history.length > 1) { // Need at least one previous record
+        if (history.length > 1) {
             const currentSeason = getCurrentStarSeason();
-            // The spring season is named 'بدء التوسعة الربيعية'
             const isSpring = currentSeason && currentSeason.name === 'بدء التوسعة الربيعية';
             const queenAge = latestHive.queenYear ? (new Date().getFullYear() - parseInt(latestHive.queenYear)) : 0;
             
-            if (isSpring && queenAge > 1) {
-                const fifteenDaysAgo = new Date(new Date(latestHive.date).getTime() - 15 * 24 * 60 * 60 * 1000);
-                // Find the most recent record that is older than 15 days
+            if (isSpring && latestHive.frames >= 7 && queenAge >= 1) {
+                const fifteenDaysAgo = new Date(new Date().getTime() - 15 * 24 * 60 * 60 * 1000);
                 const pastRecord = history.slice().reverse().find(rec => new Date(rec.date) <= fifteenDaysAgo);
                 
                 if (pastRecord) {
                     const frameIncrease = latestHive.frames - pastRecord.frames;
-                    if (frameIncrease > 3) {
+                    if (frameIncrease >= 3) {
                         recommendations.push({ 
                             type: 'danger', 
                             title: '🚨 توقع التطريد', 
-                            text: 'تنبيه: خطر تطريد مرتفع لهذه الخلية!'
+                            text: `تنبيه: خطر تطريد مرتفع! الخلية قوية، الملكة ليست صغيرة، والنمو سريع (+${frameIncrease} إطارات في آخر أسبوعين). افحص بيوت الملكات فوراً.`
                         });
                     }
                 }
             }
         }
 
-        // 2. Hive Weakening Prediction
+        // 2. Hive Weakening/Collapse Prediction
         if (history.length >= 3) {
             const lastThreeRecords = history.slice(-3);
             const health_n = managerInstance.calculateHealthScore(lastThreeRecords[2]);
@@ -1191,32 +1184,32 @@
             if (isDeclining && lowHoney) {
                 recommendations.push({
                     type: 'danger',
-                    title: '📉 توقع ضعف الخلية',
-                    text: 'تنبيه: الخلية في خطر وتحتاج لدعم فوري.'
+                    title: '📉 توقع ضعف وانهيار الخلية',
+                    text: 'تنبيه: الخلية في تدهور مستمر وصحة الطائفة تتناقص مع نقص حاد في المخزون. تحتاج لدعم فوري بالتغذية وإطارات حضنة لتجنب انهيارها.'
                 });
             }
         }
-        // --- END: New Predictive Logic ---
+        // --- END: Predictive AI Logic ---
         
         const health = managerInstance.calculateHealthScore(latestHive);
         const { frames, honeyFrames = 0, pollenFrames = 0 } = latestHive;
         
         const requiredHoney = 2, requiredPollen = 1, excessThreshold = 3;
 
-        if (honeyFrames > requiredHoney + excessThreshold) recommendations.push({ type: 'excess', title: 'فائض كبير في العسل', text: `الخلية لديها ${honeyFrames} إطار عسل. يجب سحب الفائض فوراً.` });
-        else if (honeyFrames < requiredHoney) recommendations.push({ type: 'deficit', title: 'نقص في العسل', text: `الخلية لديها ${honeyFrames} إطار عسل فقط. يرجى التغذية.` });
+        if (honeyFrames > requiredHoney + excessThreshold) recommendations.push({ type: 'excess', title: 'فائض كبير في العسل', text: `الخلية لديها ${honeyFrames} إطار عسل. يجب سحب الفائض فوراً للاستفادة منه وتوفير مساحة للملكة.` });
+        else if (honeyFrames < requiredHoney) recommendations.push({ type: 'deficit', title: 'نقص في مخزون العسل', text: `الخلية لديها ${honeyFrames} إطار عسل فقط. يرجى التغذية فوراً لتجنب موت النحل جوعاً.` });
 
-        if (pollenFrames > requiredPollen + 1) recommendations.push({ type: 'excess', title: 'فائض في الكرس', text: `الخلية لديها ${pollenFrames} إطار كرس. يمكن استخدامه لدعم خلايا أخرى.` });
-        else if (pollenFrames < requiredPollen) recommendations.push({ type: 'deficit', title: 'نقص في الكرس', text: `الخلية لديها ${pollenFrames} إطار كرس فقط. يرجى توفير بدائل.` });
+        if (pollenFrames > requiredPollen + 1) recommendations.push({ type: 'excess', title: 'فائض في الكرس', text: `الخلية لديها ${pollenFrames} إطار كرس. يمكن استخدامه لدعم خلايا أخرى أضعف في المنحل.` });
+        else if (pollenFrames < requiredPollen) recommendations.push({ type: 'deficit', title: 'نقص في مخزون الكرس', text: `الخلية لديها ${pollenFrames} إطار كرس فقط. يرجى توفير بدائل حبوب اللقاح لدعم الحضنة.` });
         
-        if (health < 60) recommendations.push({ type: 'danger', title: 'صحة الخلية ضعيفة', text: `درجة الصحة الحالية ${health}%. يرجى مراجعة سجل الملاحظات.` });
-        if (frames < 4) recommendations.push({ type: 'warning', title: 'الخلية ضعيفة جداً', text: `تحتوي على ${frames} إطارات. يوصى بتغذية أو ضمها.` });
-        if (latestHive.queenStatus === 'بدون ملكة') recommendations.push({ type: 'danger', title: 'الخلية يتيمة!', text: 'يجب إضافة ملكة جديدة أو ضمها فوراً.' });
-        else if (latestHive.queenStatus === 'مكذبة') recommendations.push({ type: 'danger', title: 'توقف: الخلية مكذبة!', text: 'يجب ضم الخلية لإنقاذها.' });
+        if (health < 60) recommendations.push({ type: 'danger', title: 'صحة الخلية ضعيفة', text: `درجة الصحة الحالية ${health}%. يرجى مراجعة سجل الملاحظات للبحث عن أمراض أو آفات.` });
+        if (frames < 4) recommendations.push({ type: 'warning', title: 'الخلية ضعيفة جداً', text: `تحتوي على ${frames} إطارات. يوصى بتغذية مكثفة أو ضمها لخلية أخرى.` });
+        if (latestHive.queenStatus === 'بدون ملكة') recommendations.push({ type: 'danger', title: 'الخلية يتيمة!', text: 'يجب إضافة ملكة جديدة أو بيت ملكي أو ضمها فوراً قبل أن تكذب.' });
+        else if (latestHive.queenStatus === 'مكذبة') recommendations.push({ type: 'danger', title: 'توقف: الخلية مكذبة!', text: 'يجب نفض النحل بعيداً وضم الخلية لخلية قوية لإنقاذ النحل المتبقي.' });
         const queenAge = new Date().getFullYear() - (latestHive.queenYear ? parseInt(latestHive.queenYear) : new Date().getFullYear());
-        if (queenAge >= 2) recommendations.push({ type: 'info', title: 'الاستعداد لتغيير الملكة', text: `عمر الملكة ${queenAge} سنوات. يفضل تغييرها.` });
-        if (frames >= 8 && health > 80) recommendations.push({ type: 'success', title: 'الخلية قوية ومزدهرة', text: 'يمكن التفكير في تقسيمها أو إضافة عاسلة.' });
-        if (recommendations.length === 0) recommendations.push({ type: 'success', title: 'الخلية بحالة جيدة', text: 'لا توجد ملاحظات عاجلة.' });
+        if (queenAge >= 2) recommendations.push({ type: 'info', title: 'الاستعداد لتغيير الملكة', text: `عمر الملكة ${queenAge} سنوات. يفضل تغييرها في الموسم القادم لزيادة النشاط.` });
+        if (frames >= 8 && health > 80) recommendations.push({ type: 'success', title: 'الخلية قوية ومزدهرة', text: 'هذه الخلية ممتازة. يمكن التفكير في تقسيمها أو إضافة عاسلة لجمع العسل.' });
+        if (recommendations.length === 0) recommendations.push({ type: 'success', title: 'الخلية بحالة جيدة ومستقرة', text: 'لا توجد ملاحظات أو إجراءات عاجلة مطلوبة.' });
         
         recommendations.forEach(rec => {
             list.innerHTML += `<div class="recommendation-card ${rec.type}"><h4>${rec.title}</h4><p>${rec.text}</p></div>`;
@@ -1306,7 +1299,6 @@
         const fullMonthlyData = fullMonthlyLabels.map(m => monthlyAvg[m].reduce((a, b) => a + b, 0) / monthlyAvg[m].length);
         
         let displayMonthlyLabels = fullMonthlyLabels;
-
         if (window.innerWidth < 768 && fullMonthlyLabels.length > 8) {
             const step = Math.ceil(fullMonthlyLabels.length / 8);
             displayMonthlyLabels = fullMonthlyLabels.filter((_, i) => i % step === 0);
